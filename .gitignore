@@ -1,33 +1,219 @@
-HELP.md
+# =========================================================
+# TEAM24 Pharma Sentinel
+# Spring Boot + Python/FastAPI + React/Vite
+# =========================================================
+
+# ---------------------------------------------------------
+# Java / Maven / Spring Boot
+# ---------------------------------------------------------
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-### STS ###
+# Spring Tool Suite / Eclipse
 .apt_generated
 .classpath
 .factorypath
 .project
-.settings
+.settings/
 .springBeans
 .sts4-cache
 
-### IntelliJ IDEA ###
-.idea
+# IntelliJ IDEA
+.idea/
 *.iws
 *.iml
 *.ipr
 
-### NetBeans ###
+# NetBeans
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
-### VS Code ###
+# Java build
+*.class
+
+# ---------------------------------------------------------
+# VS Code
+# ---------------------------------------------------------
 .vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# ---------------------------------------------------------
+# Python
+# ---------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Python environments
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# Python packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Python testing / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.cache/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# mypy / pytype / Pyre
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pytype/
+.pyre/
+
+# Ruff
+.ruff_cache/
+
+# Spyder
+.spyderproject
+.spyproject
+
+# Rope
+.ropeproject
+
+# ---------------------------------------------------------
+# Node.js / React / Vite
+# ---------------------------------------------------------
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+
+# React / Vite environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ---------------------------------------------------------
+# Environment / Secrets
+# ---------------------------------------------------------
+.env
+.env.*
+!.env.example
+
+# Local configuration containing credentials
+application-local.properties
+application-local.yml
+application-secret.properties
+application-secret.yml
+
+# ---------------------------------------------------------
+# Databases / local development
+# ---------------------------------------------------------
+*.db
+*.sqlite
+*.sqlite3
+
+# ---------------------------------------------------------
+# Logs / temporary files
+# ---------------------------------------------------------
+*.log
+logs/
+temp/
+tmp/
+*.tmp
+
+# VS Code temporary execution
+tempCodeRunnerFile.py
+
+# ---------------------------------------------------------
+# OS files
+# ---------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------------------------------------------------------
+# Python tools
+# ---------------------------------------------------------
+.pdm-python
+.pdm-build/
+.pixi/
+__pypackages__/
+.pybuilder/
+.pyenv/
+
+# Poetry
+poetry.lock
+
+# Pipenv
+Pipfile.lock
+
+# ---------------------------------------------------------
+# Documentation / generated files
+# ---------------------------------------------------------
+docs/_build/
+
+# ---------------------------------------------------------
+# Streamlit
+# ---------------------------------------------------------
+.streamlit/secrets.toml
+
+# ---------------------------------------------------------
+# Model / ML generated files
+# ---------------------------------------------------------
+*.joblib
+*.pkl
+*.pickle
+*.h5
+*.keras
+*.onnx
+
+# ---------------------------------------------------------
+# Data files
+# IMPORTANT:
+# Do not commit large/private datasets to GitHub.
+# Keep dataset instructions in README/docs.
+# ---------------------------------------------------------
+data/raw/*
+data/processed/*
+
+# Allow folder placeholders
+!data/raw/.gitkeep
+!data/processed/.gitkeep
