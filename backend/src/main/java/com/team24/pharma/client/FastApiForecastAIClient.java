@@ -172,14 +172,14 @@ public class FastApiForecastAIClient implements ForecastAIClient {
 
     /**
      * Maps FastAPI confidence metrics to the existing ModelMetrics DTO.
-     * wape → wape (percentage value preserved), smape → smape, mae left null
-     * since FastAPI does not provide MAE in /forecast.
+     * wape → wape (percentage value preserved), smape → smape, mae → mae.
      */
     private ModelMetrics mapMetrics(FastApiConfidence confidence) {
         if (confidence == null) {
             return null;
         }
         return ModelMetrics.builder()
+                .mae(confidence.getMeanMae())
                 .wape(confidence.getMeanWapePct())
                 .smape(confidence.getMeanSmapePct())
                 .build();

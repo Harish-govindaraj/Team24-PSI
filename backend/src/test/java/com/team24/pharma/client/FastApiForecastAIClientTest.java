@@ -71,6 +71,7 @@ class FastApiForecastAIClientTest {
                 .trend("increasing")
                 .seasonalityDetected(true)
                 .confidence(FastApiConfidence.builder()
+                        .meanMae(new BigDecimal("12.34"))
                         .meanWapePct(new BigDecimal("5.00"))
                         .meanSmapePct(new BigDecimal("3.12"))
                         .method("walk_forward_wape")
@@ -165,6 +166,7 @@ class FastApiForecastAIClientTest {
 
         // Assert metrics mapping
         assertThat(result.getMetrics()).isNotNull();
+        assertThat(result.getMetrics().getMae()).isEqualByComparingTo(new BigDecimal("12.34"));
         assertThat(result.getMetrics().getWape()).isEqualByComparingTo(new BigDecimal("5.00"));
         assertThat(result.getMetrics().getSmape()).isEqualByComparingTo(new BigDecimal("3.12"));
 

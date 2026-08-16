@@ -77,6 +77,7 @@ def generate_forecast(category: str, horizon: int) -> dict:
         "seasonalityDetected": seasonality_detected,
         "confidence": {
             "method": "walk_forward_wape",
+            "meanMae": entry["mean_mae"],
             "meanWapePct": entry["mean_wape"],
             "meanSmapePct": entry["mean_smape"],
             "note": (

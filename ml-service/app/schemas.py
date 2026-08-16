@@ -34,6 +34,7 @@ class ForecastPoint(BaseModel):
 
 class ConfidenceInfo(BaseModel):
     method: str
+    meanMae: float
     meanWapePct: float
     meanSmapePct: float
     note: str

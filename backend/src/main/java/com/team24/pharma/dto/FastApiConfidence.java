@@ -24,6 +24,9 @@ public class FastApiConfidence {
 
     private String method;
 
+    @JsonProperty("meanMae")
+    private BigDecimal meanMae;
+
     @JsonProperty("meanWapePct")
     private BigDecimal meanWapePct;
 
