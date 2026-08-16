@@ -1,47 +1,78 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional
-from datetime import date
+"""
+Request/response contracts for the PSI ML service API. Pydantic
+enforces these at the boundary - invalid input never reaches
+forecast_service.py.
+"""
+
+from __future__ import annotations
+
+from typing import Optional
+
+from pydantic import BaseModel, Field, field_validator
+
 
 class ForecastRequest(BaseModel):
-    category: str
-    horizon: int
+    category: str = Field(..., min_length=1, description="Drug category code, e.g. 'R03'")
+    horizon: int = Field(..., ge=1, le=365, description="Days to forecast, 1-365")
+
+    @field_validator("category")
+    @classmethod
+    def category_not_blank(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("category must not be empty")
+        return v
+
 
 class ForecastPoint(BaseModel):
-    date: date
-    predicted_sales: float
-    lower_bound: float
-    upper_bound: float
+    day: int
+    date: str
+    predictedSales: float
+    lowerBound: Optional[float] = None
+    upperBound: Optional[float] = None
 
-class ModelMetrics(BaseModel):
-    mae: float
-    smape: float
-    wape: float
 
-class ExplanationItem(BaseModel):
+class ConfidenceInfo(BaseModel):
+    method: str
+    meanWapePct: float
+    meanSmapePct: float
+    note: str
+
+
+class ExplanationFeature(BaseModel):
     feature: str
-    importance: float
-    direction: str
+    meanAbsShapValue: float
 
-class RiskResponse(BaseModel):
-    level: str
-    score: float
-    type: str
-    reason: str
 
-class RecommendationResponse(BaseModel):
-    strategy: str
-    action: str
-    reason: str
-    human_approval_required: bool
+class Explanation(BaseModel):
+    available: bool
+    method: Optional[str] = None
+    reason: Optional[str] = None
+    topFeatures: Optional[list[ExplanationFeature]] = None
+
 
 class ForecastResponse(BaseModel):
     category: str
-    model: str
+    horizon: int
+    modelType: str
+    modelVersion: str
+    forecast: list[ForecastPoint]
     trend: str
-    seasonality: str
-    confidence_score: float
-    forecast: List[ForecastPoint]
-    metrics: ModelMetrics
-    explanation: List[ExplanationItem]
-    risk: RiskResponse
-    recommendation: RecommendationResponse
+    seasonalityDetected: bool
+    confidence: ConfidenceInfo
+    explanation: Explanation
+
+
+class HealthResponse(BaseModel):
+    status: str
+    modelsRegistered: int
+    categories: list[str]
+
+
+class ErrorDetail(BaseModel):
+    code: str
+    message: str
+
+
+class ErrorResponse(BaseModel):
+    error: ErrorDetail

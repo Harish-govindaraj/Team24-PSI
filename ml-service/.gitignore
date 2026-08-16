@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+models/artifacts/*.pkl
+models/artifacts/*.joblib
+.env
+
+models/artifacts/manifest.json
+
+data/synthetic/*.json
+
+# Real dataset - do not commit
+/data/raw/salesdaily.csv
