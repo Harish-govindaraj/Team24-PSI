@@ -8,7 +8,7 @@ describe('RecommendationPanel', () => {
       { strategy: 'Expedite', action: 'Air freight', reason: 'High risk', humanApprovalRequired: true }
     ];
     render(<RecommendationPanel recommendations={recs} />);
-    
+
     expect(screen.getByText('AI Recommendations')).toBeInTheDocument();
     expect(screen.getByText('Expedite')).toBeInTheDocument();
     expect(screen.getByText('Air freight')).toBeInTheDocument();
@@ -20,7 +20,7 @@ describe('RecommendationPanel', () => {
       { strategy: 'Expedite', action: 'Air freight', reason: 'High risk', humanApprovalRequired: true }
     ];
     render(<RecommendationPanel recommendations={recs} />);
-    
+
     // The component renders: <p><strong>Human Approval Required:</strong> Yes</p>
     const approvalLabel = screen.getByText('Human Approval Required:');
     expect(approvalLabel.parentElement).toHaveTextContent('Yes');
@@ -31,7 +31,7 @@ describe('RecommendationPanel', () => {
       { strategy: 'Substitute', action: 'Use generic', reason: 'Low risk', humanApprovalRequired: false }
     ];
     render(<RecommendationPanel recommendations={recs} />);
-    
+
     const approvalLabel = screen.getByText('Human Approval Required:');
     expect(approvalLabel.parentElement).toHaveTextContent('No');
   });

@@ -15,7 +15,7 @@ describe('forecastApi', () => {
       success: true,
       data: { category: 'R03', horizon: 14, forecast: [] }
     };
-    
+
     global.fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse

@@ -28,7 +28,7 @@ describe('ForecastChart', () => {
   it('handles missing/null confidence bounds safely', () => {
     const forecast = [{ date: '2024-01-02', predictedSales: 120, lowerBound: null, upperBound: null }];
     render(<ForecastChart forecast={forecast} />);
-    
+
     // Area for confidence interval should not render
     expect(screen.queryByTestId('recharts-area')).not.toBeInTheDocument();
   });
@@ -36,7 +36,7 @@ describe('ForecastChart', () => {
   it('renders confidence interval area when lower/upper bounds exist', () => {
     const forecast = [{ date: '2024-01-02', predictedSales: 120, lowerBound: 100, upperBound: 140 }];
     render(<ForecastChart forecast={forecast} />);
-    
+
     // Area for confidence interval should render
     expect(screen.getByTestId('recharts-area')).toBeInTheDocument();
   });
