@@ -10,14 +10,14 @@ describe('ScenarioPanel', () => {
     const slider = screen.getByLabelText(/Supply Shock \(Inventory Lost\)/i);
     expect(slider).toHaveAttribute('min', '0');
     expect(slider).toHaveAttribute('max', '0.95');
-    
+
     // Fire event to change to 0.75
     fireEvent.change(slider, { target: { value: '0.75' } });
     expect(slider).toHaveValue('0.75');
-    
+
     const runButton = screen.getByRole('button', { name: /Run Simulation/i });
     fireEvent.click(runButton);
-    
+
     expect(handleRun).toHaveBeenCalledWith(expect.objectContaining({
       supplyShockPct: 0.75
     }));
@@ -38,7 +38,7 @@ describe('ScenarioPanel', () => {
     };
 
     render(<ScenarioPanel category="R03" horizon={14} result={mockResult} loading={false} />);
-    
+
     expect(screen.getByText('Stockout Probability').nextElementSibling).toHaveTextContent('75.6%');
     expect(screen.getByText('Supply Shock').nextElementSibling).toHaveTextContent('45%');
   });
