@@ -23,6 +23,10 @@ function ModelMetrics({ metrics }) {
       <h3>Model Metrics</h3>
       <div className="summary-grid">
         <div className="summary-item">
+          <span className="summary-label">MAE</span>
+          <span className="summary-value">{formatValue(metrics.mae)}</span>
+        </div>
+        <div className="summary-item">
           <span className="summary-label">sMAPE</span>
           <span className="summary-value">{formatValue(metrics.smape)}%</span>
         </div>
