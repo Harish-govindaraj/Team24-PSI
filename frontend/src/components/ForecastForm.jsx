@@ -29,7 +29,7 @@ function ForecastForm({ onSubmit, isLoading }) {
       <form onSubmit={handleSubmit} className="forecast-form">
         <div className="form-group">
           <label htmlFor="category">Product Category</label>
-          <select            id="category"            value={category}            onChange={(e) => setCategory(e.target.value)}
+          <select            id="category"            value={category}            onChange={(e) => setCategory(e.target.value)}
             disabled={isLoading}
             required
           >
@@ -44,7 +44,7 @@ function ForecastForm({ onSubmit, isLoading }) {
 
         <div className="form-group">
           <label htmlFor="horizon">Forecast Horizon</label>
-          <select            id="horizon"            value={horizon}            onChange={(e) => setHorizon(e.target.value)}
+          <select            id="horizon"            value={horizon}            onChange={(e) => setHorizon(e.target.value)}
             disabled={isLoading}
             required
           >
@@ -55,7 +55,7 @@ function ForecastForm({ onSubmit, isLoading }) {
           </select>
         </div>
 
-        <button          type="submit"          disabled={isLoading || !category || !horizon}
+        <button          type="submit"          disabled={isLoading || !category || !horizon}
           className="generate-btn"
         >
           {isLoading ? 'Generating forecast...' : 'Generate Forecast'}

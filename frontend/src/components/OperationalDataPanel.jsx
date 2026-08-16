@@ -28,7 +28,7 @@ function OperationalDataPanel({ operationalData }) {
         <p><strong>Unit Price (INR):</strong> {operationalData.unitPriceInr != null ? `₹${operationalData.unitPriceInr.toFixed(2)}` : 'N/A'}</p>
         <p><strong>Promotion Active:</strong> {operationalData.promotionActive != null ? formatBool(operationalData.promotionActive) : 'N/A'}</p>
       </div>
-      {operationalData.disclaimer && (
+      {operationalData.disclaimer && (
         <div className="disclaimer-banner">
           <strong>Disclaimer:</strong> {operationalData.disclaimer}
         </div>

@@ -63,7 +63,7 @@ function ScenarioPanel({ category, horizon, onRunScenario, result, loading, erro
           />
         </div>
 
-        <button          className="btn-primary"          onClick={handleRun}          disabled={loading}
+        <button          className="btn-primary"          onClick={handleRun}          disabled={loading}
         >
           {loading ? 'Running Simulation...' : 'Run Simulation'}
         </button>
@@ -94,7 +94,7 @@ function ScenarioPanel({ category, horizon, onRunScenario, result, loading, erro
               <span className="metric-value">{result.meanShortfallUnits} units</span>
             </div>
           </div>
-          {result.note && (
+          {result.note && (
             <div className="scenario-disclaimer">
               <strong>⚠ Disclaimer:</strong> {result.note}
               <br/>

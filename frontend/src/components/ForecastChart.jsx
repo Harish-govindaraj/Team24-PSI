@@ -75,14 +75,16 @@ function ForecastChart({ forecast, historicalSales = [] }) {
             />
             <Legend verticalAlign="top" height={36}/>
 
-            <Area
-              type="monotone"
-              dataKey="interval"
-              fill="#bfdbfe"
-              stroke="none"
-              name="Confidence Interval"
-              connectNulls={false}
-            />
+            {chartData.some(point => point.interval != null) && (
+              <Area
+                type="monotone"
+                dataKey="interval"
+                fill="#bfdbfe"
+                stroke="none"
+                name="Confidence Interval"
+                connectNulls={false}
+              />
+            )}
 
             <Line
               type="monotone"

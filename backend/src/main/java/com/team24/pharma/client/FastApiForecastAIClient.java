@@ -120,16 +120,16 @@ public class FastApiForecastAIClient implements ForecastAIClient {
 
         if ("HIGH".equals(stockout)) {
             type = "Stockout";
-            reason = "High risk of stockout identified based on operational data and forecasted demand.";
+            reason = "Projected demand exceeds current inventory levels before the next supplier delivery.";
         } else if ("HIGH".equals(expiry)) {
             type = "Expiry";
-            reason = "High risk of inventory expiration identified based on shelf life and forecasted demand.";
+            reason = "Projected time to consume current inventory at forecast demand exceeds the remaining shelf life.";
         } else if ("MEDIUM".equals(stockout)) {
             type = "Stockout";
-            reason = "Moderate risk of stockout.";
+            reason = "Inventory levels are projected to be tight before the next supplier delivery.";
         } else if ("MEDIUM".equals(expiry)) {
             type = "Expiry";
-            reason = "Moderate risk of expiration.";
+            reason = "A portion of inventory may expire if demand drops below projections.";
         }
 
         return RiskResponse.builder()
