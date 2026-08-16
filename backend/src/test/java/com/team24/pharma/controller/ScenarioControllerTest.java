@@ -1,6 +1,9 @@
 package com.team24.pharma.controller;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -12,6 +15,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.team24.pharma.client.ForecastAIClient;
 import com.team24.pharma.config.SecurityConfig;
 import com.team24.pharma.dto.ScenarioResponse;
+
+import java.util.stream.Stream;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -61,79 +66,77 @@ class ScenarioControllerTest {
                 .andExpect(jsonPath("$.data.meanShortfallUnits").value(10.5));
     }
 
-    @Test
-    void runScenario_invalidHorizon_returns400() throws Exception {
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("provideInvalidScenarios")
+    void runScenario_invalidRequest_returns400WithValidationMessage(
+            String testName, String jsonPayload, String expectedField, String expectedMessage) throws Exception {
+
         mockMvc.perform(post("/api/scenarios")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                        {
-                            "category": "R03",
-                            "horizon": 100,
-                            "supplyShockPct": 0.3,
-                            "nSimulations": 200
-                        }
-                        """))
-                .andExpect(status().isBadRequest());
+                .content(jsonPayload))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.data." + expectedField).value(expectedMessage));
     }
 
-    @Test
-    void runScenario_invalidSupplyShockNegative_returns400() throws Exception {
-        // Validation missing in ScenarioRequest, but I didn't add Negative validation yet. Wait!        // The prompt asked: validation failure for supplyShockPct < 0, validation failure for supplyShockPct > 0.95.
-        // Let me add the missing @Min @Max to ScenarioRequest later or just expect BadRequest if I add it.
-        mockMvc.perform(post("/api/scenarios")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                        {
-                            "category": "R03",
-                            "horizon": 7,
-                            "supplyShockPct": -0.1,
-                            "nSimulations": 200
-                        }
-                        """))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void runScenario_invalidSupplyShockTooHigh_returns400() throws Exception {
-        mockMvc.perform(post("/api/scenarios")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                        {
-                            "category": "R03",
-                            "horizon": 7,
-                            "supplyShockPct": 1.0,
-                            "nSimulations": 200
-                        }
-                        """))
-                .andExpect(status().isBadRequest());
-    }
-    @Test
-    void runScenario_invalidSimulationsLow_returns400() throws Exception {
-        mockMvc.perform(post("/api/scenarios")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                        {
-                            "category": "R03",
-                            "horizon": 7,
-                            "supplyShockPct": 0.3,
-                            "nSimulations": 10
-                        }
-                        """))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void runScenario_invalidSimulationsHigh_returns400() throws Exception {
-        mockMvc.perform(post("/api/scenarios")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                        {
-                            "category": "R03",
-                            "horizon": 7,
-                            "supplyShockPct": 0.3,
-                            "nSimulations": 3000
-                        }
-                        """))
-                .andExpect(status().isBadRequest());
+    private static Stream<Arguments> provideInvalidScenarios() {
+        return Stream.of(
+            Arguments.of(
+                "horizon > 90",
+                """
+                { "category": "R03", "horizon": 100, "supplyShockPct": 0.3, "nSimulations": 200 }
+                """,
+                "horizon", "Horizon must not exceed 90"
+            ),
+            Arguments.of(
+                "horizon < 1",
+                """
+                { "category": "R03", "horizon": 0, "supplyShockPct": 0.3, "nSimulations": 200 }
+                """,
+                "horizon", "Horizon must be at least 1"
+            ),
+            Arguments.of(
+                "supplyShockPct < 0",
+                """
+                { "category": "R03", "horizon": 7, "supplyShockPct": -0.1, "nSimulations": 200 }
+                """,
+                "supplyShockPct", "Supply shock percentage cannot be negative"
+            ),
+            Arguments.of(
+                "supplyShockPct > 0.95",
+                """
+                { "category": "R03", "horizon": 7, "supplyShockPct": 1.0, "nSimulations": 200 }
+                """,
+                "supplyShockPct", "Supply shock percentage cannot exceed 0.95"
+            ),
+            Arguments.of(
+                "nSimulations < 50",
+                """
+                { "category": "R03", "horizon": 7, "supplyShockPct": 0.3, "nSimulations": 10 }
+                """,
+                "nSimulations", "Number of simulations must be at least 50"
+            ),
+            Arguments.of(
+                "nSimulations > 2000",
+                """
+                { "category": "R03", "horizon": 7, "supplyShockPct": 0.3, "nSimulations": 3000 }
+                """,
+                "nSimulations", "Number of simulations must not exceed 2000"
+            ),
+            Arguments.of(
+                "missing required category",
+                """
+                { "horizon": 7, "supplyShockPct": 0.3, "nSimulations": 200 }
+                """,
+                "category", "Category is required"
+            ),
+            Arguments.of(
+                "missing required horizon",
+                """
+                { "category": "R03", "supplyShockPct": 0.3, "nSimulations": 200 }
+                """,
+                "horizon", "Horizon is required"
+            )
+        );
     }
 }
