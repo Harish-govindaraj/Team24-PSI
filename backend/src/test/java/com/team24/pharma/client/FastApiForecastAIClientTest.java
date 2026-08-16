@@ -13,6 +13,10 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 import com.team24.pharma.common.exception.AiServiceException;
+import com.team24.pharma.dto.FastApiConfidence;
+import com.team24.pharma.dto.FastApiExplanation;
+import com.team24.pharma.dto.FastApiExplanationFeature;
+import com.team24.pharma.dto.FastApiForecastResponse;
 import com.team24.pharma.dto.ForecastPoint;
 import com.team24.pharma.dto.ForecastRequest;
 import com.team24.pharma.dto.ForecastResponse;
@@ -53,12 +57,25 @@ class FastApiForecastAIClientTest {
                 .horizon(30)
                 .build();
 
-        ForecastResponse expectedResponse = ForecastResponse.builder()
+        FastApiForecastResponse fastApiResponse = FastApiForecastResponse.builder()
                 .category("R03")
-                .model("Prophet")
+                .modelType("Prophet")
                 .trend("increasing")
-                .seasonality("yearly")
-                .confidenceScore(new BigDecimal("0.9500"))
+                .seasonalityDetected(true)
+                .confidence(FastApiConfidence.builder()
+                        .meanWapePct(new BigDecimal("5.00"))
+                        .meanSmapePct(new BigDecimal("3.12"))
+                        .method("walk_forward_wape")
+                        .build())
+                .explanation(FastApiExplanation.builder()
+                        .available(true)
+                        .method("shap.TreeExplainer")
+                        .topFeatures(List.of(
+                                FastApiExplanationFeature.builder()
+                                        .feature("day_of_week")
+                                        .meanAbsShapValue(new BigDecimal("0.337"))
+                                        .build()))
+                        .build())
                 .forecast(List.of(
                         ForecastPoint.builder()
                                 .date(LocalDate.of(2024, 4, 1))
@@ -73,7 +90,7 @@ class FastApiForecastAIClientTest {
         when(requestBodyUriSpec.uri(eq("/forecast"))).thenReturn(requestBodySpec);
         when(requestBodySpec.body(any(ForecastRequest.class))).thenReturn(requestBodySpec);
         when(requestBodySpec.retrieve()).thenReturn(responseSpec);
-        when(responseSpec.body(ForecastResponse.class)).thenReturn(expectedResponse);
+        when(responseSpec.body(FastApiForecastResponse.class)).thenReturn(fastApiResponse);
 
         // Act
         ForecastResponse result = client.getForecast(request);
@@ -83,7 +100,7 @@ class FastApiForecastAIClientTest {
         assertThat(result.getCategory()).isEqualTo("R03");
         assertThat(result.getModel()).isEqualTo("Prophet");
         assertThat(result.getTrend()).isEqualTo("increasing");
-        assertThat(result.getSeasonality()).isEqualTo("yearly");
+        assertThat(result.getSeasonality()).isEqualTo("detected");
         assertThat(result.getConfidenceScore()).isEqualByComparingTo(new BigDecimal("0.9500"));
         assertThat(result.getForecast()).hasSize(1);
 
@@ -92,6 +109,17 @@ class FastApiForecastAIClientTest {
         assertThat(point.getPredictedSales()).isEqualByComparingTo(new BigDecimal("1500.00"));
         assertThat(point.getLowerBound()).isEqualByComparingTo(new BigDecimal("1200.00"));
         assertThat(point.getUpperBound()).isEqualByComparingTo(new BigDecimal("1800.00"));
+
+        // Assert explanation mapping
+        assertThat(result.getExplanation()).hasSize(1);
+        assertThat(result.getExplanation().get(0).getFeature()).isEqualTo("day_of_week");
+        assertThat(result.getExplanation().get(0).getImportance())
+                .isEqualByComparingTo(new BigDecimal("0.337"));
+
+        // Assert metrics mapping
+        assertThat(result.getMetrics()).isNotNull();
+        assertThat(result.getMetrics().getWape()).isEqualByComparingTo(new BigDecimal("5.00"));
+        assertThat(result.getMetrics().getSmape()).isEqualByComparingTo(new BigDecimal("3.12"));
     }
 
     @Test
@@ -125,7 +153,7 @@ class FastApiForecastAIClientTest {
         when(requestBodyUriSpec.uri(eq("/forecast"))).thenReturn(requestBodySpec);
         when(requestBodySpec.body(any(ForecastRequest.class))).thenReturn(requestBodySpec);
         when(requestBodySpec.retrieve()).thenReturn(responseSpec);
-        when(responseSpec.body(ForecastResponse.class)).thenReturn(null);
+        when(responseSpec.body(FastApiForecastResponse.class)).thenReturn(null);
 
         // Act & Assert
         assertThatThrownBy(() -> client.getForecast(request))

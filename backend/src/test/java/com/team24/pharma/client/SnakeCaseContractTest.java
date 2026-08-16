@@ -9,13 +9,12 @@ import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.PropertyNamingStrategies;
 import tools.jackson.databind.json.JsonMapper;
 
-import com.team24.pharma.dto.ExplanationItem;
+import com.team24.pharma.dto.FastApiConfidence;
+import com.team24.pharma.dto.FastApiExplanation;
+import com.team24.pharma.dto.FastApiForecastResponse;
 import com.team24.pharma.dto.ForecastPoint;
 import com.team24.pharma.dto.ForecastRequest;
 import com.team24.pharma.dto.ForecastResponse;
-import com.team24.pharma.dto.ModelMetrics;
-import com.team24.pharma.dto.RecommendationResponse;
-import com.team24.pharma.dto.RiskResponse;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -38,114 +37,132 @@ class SnakeCaseContractTest {
     }
 
     @Test
-    void deserializeForecastResponse_fromSnakeCaseJson() throws Exception {
-        // This is the exact JSON structure FastAPI will return
+    void deserializeFastApiForecastResponse_fromActualJson() throws Exception {
+        // This is the exact JSON structure FastAPI /forecast returns (camelCase)
         String fastApiJson = """
                 {
-                    "category": "R03",
-                    "model": "Prophet",
-                    "trend": "increasing",
-                    "seasonality": "yearly",
-                    "confidence_score": 0.9500,
+                    "category": "M01AB",
+                    "horizon": 7,
+                    "modelType": "sarima",
+                    "modelVersion": "20260816T085847Z",
                     "forecast": [
                         {
-                            "date": "2024-04-01",
-                            "predicted_sales": 1500.00,
-                            "lower_bound": 1200.00,
-                            "upper_bound": 1800.00
+                            "date": "2019-10-09",
+                            "predictedSales": 5.1222,
+                            "lowerBound": 0,
+                            "upperBound": 10.365
                         },
                         {
-                            "date": "2024-04-02",
-                            "predicted_sales": 1520.50,
-                            "lower_bound": null,
-                            "upper_bound": null
+                            "date": "2019-10-10",
+                            "predictedSales": 6.2000,
+                            "lowerBound": null,
+                            "upperBound": null
                         }
                     ],
-                    "metrics": {
-                        "mae": 45.23,
-                        "smape": 3.12,
-                        "wape": 2.89
+                    "trend": "stable",
+                    "seasonalityDetected": false,
+                    "confidence": {
+                        "method": "walk_forward_wape",
+                        "meanWapePct": 41.3178,
+                        "meanSmapePct": 44.4354,
+                        "note": "Walk-forward validation note"
                     },
-                    "explanation": [
-                        {
-                            "feature": "seasonality_yearly",
-                            "importance": 0.45,
-                            "direction": "positive"
-                        }
-                    ],
-                    "risk": {
-                        "level": "LOW",
-                        "score": 0.15,
-                        "type": "demand_fluctuation",
-                        "reason": "Stable historical demand with low variance"
-                    },
-                    "recommendation": {
-                        "strategy": "maintain_stock",
-                        "action": "Keep current inventory levels",
-                        "reason": "Demand is stable and predictable",
-                        "human_approval_required": false
+                    "explanation": {
+                        "available": true,
+                        "method": "shap.TreeExplainer",
+                        "reason": null,
+                        "topFeatures": [
+                            {
+                                "feature": "day_of_week",
+                                "meanAbsShapValue": 0.337
+                            }
+                        ]
                     }
                 }
                 """;
 
         // Act
-        ForecastResponse response = snakeCaseMapper.readValue(fastApiJson, ForecastResponse.class);
+        FastApiForecastResponse response = snakeCaseMapper.readValue(fastApiJson, FastApiForecastResponse.class);
 
-        // Assert — top-level fields
-        assertThat(response.getCategory()).isEqualTo("R03");
-        assertThat(response.getModel()).isEqualTo("Prophet");
-        assertThat(response.getTrend()).isEqualTo("increasing");
-        assertThat(response.getSeasonality()).isEqualTo("yearly");
-        assertThat(response.getConfidenceScore())
-                .isEqualByComparingTo(new BigDecimal("0.9500"));
+        // Assert â€” top-level fields
+        assertThat(response.getCategory()).isEqualTo("M01AB");
+        assertThat(response.getHorizon()).isEqualTo(7);
+        assertThat(response.getModelType()).isEqualTo("sarima");
+        assertThat(response.getModelVersion()).isEqualTo("20260816T085847Z");
+        assertThat(response.getTrend()).isEqualTo("stable");
+        assertThat(response.getSeasonalityDetected()).isFalse();
 
-        // Assert — forecast points (snake_case → camelCase)
+        // Assert â€” forecast points (snake_case â†’ camelCase)
         assertThat(response.getForecast()).hasSize(2);
         ForecastPoint point1 = response.getForecast().get(0);
-        assertThat(point1.getDate()).isEqualTo(LocalDate.of(2024, 4, 1));
+        assertThat(point1.getDate()).isEqualTo(LocalDate.of(2019, 10, 9));
         assertThat(point1.getPredictedSales())
-                .isEqualByComparingTo(new BigDecimal("1500.00"));
+                .isEqualByComparingTo(new BigDecimal("5.1222"));
         assertThat(point1.getLowerBound())
-                .isEqualByComparingTo(new BigDecimal("1200.00"));
+                .isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(point1.getUpperBound())
-                .isEqualByComparingTo(new BigDecimal("1800.00"));
+                .isEqualByComparingTo(new BigDecimal("10.365"));
 
         ForecastPoint point2 = response.getForecast().get(1);
         assertThat(point2.getPredictedSales())
-                .isEqualByComparingTo(new BigDecimal("1520.50"));
+                .isEqualByComparingTo(new BigDecimal("6.2000"));
         assertThat(point2.getLowerBound()).isNull();
         assertThat(point2.getUpperBound()).isNull();
 
-        // Assert — metrics
-        ModelMetrics metrics = response.getMetrics();
-        assertThat(metrics).isNotNull();
-        assertThat(metrics.getMae()).isEqualByComparingTo(new BigDecimal("45.23"));
-        assertThat(metrics.getSmape()).isEqualByComparingTo(new BigDecimal("3.12"));
-        assertThat(metrics.getWape()).isEqualByComparingTo(new BigDecimal("2.89"));
+        // Assert â€” confidence (object, not scalar)
+        FastApiConfidence confidence = response.getConfidence();
+        assertThat(confidence).isNotNull();
+        assertThat(confidence.getMethod()).isEqualTo("walk_forward_wape");
+        assertThat(confidence.getMeanWapePct())
+                .isEqualByComparingTo(new BigDecimal("41.3178"));
+        assertThat(confidence.getMeanSmapePct())
+                .isEqualByComparingTo(new BigDecimal("44.4354"));
+        assertThat(confidence.getNote()).isEqualTo("Walk-forward validation note");
 
-        // Assert — explanation
-        assertThat(response.getExplanation()).hasSize(1);
-        ExplanationItem explanation = response.getExplanation().get(0);
-        assertThat(explanation.getFeature()).isEqualTo("seasonality_yearly");
-        assertThat(explanation.getImportance())
-                .isEqualByComparingTo(new BigDecimal("0.45"));
-        assertThat(explanation.getDirection()).isEqualTo("positive");
+        // Assert â€” explanation (object with nested array, not a top-level array)
+        FastApiExplanation explanation = response.getExplanation();
+        assertThat(explanation).isNotNull();
+        assertThat(explanation.getAvailable()).isTrue();
+        assertThat(explanation.getMethod()).isEqualTo("shap.TreeExplainer");
+        assertThat(explanation.getReason()).isNull();
+        assertThat(explanation.getTopFeatures()).hasSize(1);
+        assertThat(explanation.getTopFeatures().get(0).getFeature()).isEqualTo("day_of_week");
+        assertThat(explanation.getTopFeatures().get(0).getMeanAbsShapValue())
+                .isEqualByComparingTo(new BigDecimal("0.337"));
+    }
 
-        // Assert — risk
-        RiskResponse risk = response.getRisk();
-        assertThat(risk).isNotNull();
-        assertThat(risk.getLevel()).isEqualTo("LOW");
-        assertThat(risk.getScore()).isEqualByComparingTo(new BigDecimal("0.15"));
-        assertThat(risk.getType()).isEqualTo("demand_fluctuation");
-        assertThat(risk.getReason()).isEqualTo("Stable historical demand with low variance");
+    @Test
+    void deserializeFastApiForecastResponse_explanationUnavailable() throws Exception {
+        // FastAPI returns explanation.available=false with no topFeatures
+        String fastApiJson = """
+                {
+                    "category": "N02BE",
+                    "horizon": 14,
+                    "modelType": "sarima",
+                    "modelVersion": "20260816T085847Z",
+                    "forecast": [],
+                    "trend": "increasing",
+                    "seasonalityDetected": true,
+                    "confidence": {
+                        "method": "walk_forward_wape",
+                        "meanWapePct": 20.0,
+                        "meanSmapePct": 18.5,
+                        "note": null
+                    },
+                    "explanation": {
+                        "available": false,
+                        "method": null,
+                        "reason": "SHAP not supported for SARIMA models",
+                        "topFeatures": null
+                    }
+                }
+                """;
 
-        // Assert — recommendation (human_approval_required → humanApprovalRequired)
-        RecommendationResponse rec = response.getRecommendation();
-        assertThat(rec).isNotNull();
-        assertThat(rec.getStrategy()).isEqualTo("maintain_stock");
-        assertThat(rec.getAction()).isEqualTo("Keep current inventory levels");
-        assertThat(rec.getReason()).isEqualTo("Demand is stable and predictable");
-        assertThat(rec.getHumanApprovalRequired()).isFalse();
+        FastApiForecastResponse response = snakeCaseMapper.readValue(fastApiJson, FastApiForecastResponse.class);
+
+        assertThat(response.getExplanation().getAvailable()).isFalse();
+        assertThat(response.getExplanation().getReason()).isEqualTo("SHAP not supported for SARIMA models");
+        assertThat(response.getExplanation().getTopFeatures()).isNull();
     }
 
     @Test
@@ -166,8 +183,9 @@ class SnakeCaseContractTest {
     }
 
     @Test
-    void deserializeForecastResponse_withMinimalSnakeCaseJson() throws Exception {
-        // FastAPI might return a minimal response with only required fields
+    void deserializeForecastResponse_withMinimalJson() throws Exception {
+        // ForecastResponse can still be deserialized from minimal JSON
+        // (e.g., for testing or from other sources)
         String minimalJson = """
                 {
                     "category": "A02",
@@ -175,7 +193,7 @@ class SnakeCaseContractTest {
                     "forecast": [
                         {
                             "date": "2024-05-01",
-                            "predicted_sales": 800.00
+                            "predictedSales": 800.00
                         }
                     ]
                 }
@@ -199,25 +217,25 @@ class SnakeCaseContractTest {
     }
 
     @Test
-    void deserializeForecastResponse_ignoresUnknownFieldsFromFastApi() throws Exception {
-        // FastAPI may add new fields in the future — Spring Boot must not break
+    void deserializeFastApiForecastResponse_ignoresUnknownFields() throws Exception {
+        // FastAPI may add new fields in the future â€” Spring Boot must not break
         String jsonWithExtras = """
                 {
                     "category": "R03",
-                    "model": "XGBoost",
+                    "modelType": "xgboost",
                     "some_future_field": "unexpected_value",
-                    "confidence_score": 0.8800,
+                    "horizon": 7,
                     "forecast": [],
+                    "trend": "stable",
+                    "seasonalityDetected": false,
                     "extra_nested": {"foo": "bar"}
                 }
                 """;
 
-        ForecastResponse response = snakeCaseMapper.readValue(jsonWithExtras, ForecastResponse.class);
+        FastApiForecastResponse response = snakeCaseMapper.readValue(jsonWithExtras, FastApiForecastResponse.class);
 
         assertThat(response.getCategory()).isEqualTo("R03");
-        assertThat(response.getModel()).isEqualTo("XGBoost");
-        assertThat(response.getConfidenceScore())
-                .isEqualByComparingTo(new BigDecimal("0.8800"));
+        assertThat(response.getModelType()).isEqualTo("xgboost");
         assertThat(response.getForecast()).isEmpty();
     }
 }
