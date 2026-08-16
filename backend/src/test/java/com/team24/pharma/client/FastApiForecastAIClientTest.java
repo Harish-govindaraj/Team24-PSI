@@ -42,6 +42,12 @@ class FastApiForecastAIClientTest {
     @Mock
     private RestClient.ResponseSpec responseSpec;
 
+    @Mock
+    private RestClient.RequestHeadersUriSpec requestHeadersUriSpec;
+
+    @Mock
+    private RestClient.RequestHeadersSpec requestHeadersSpec;
+
     private FastApiForecastAIClient client;
 
     @BeforeEach
@@ -59,7 +65,9 @@ class FastApiForecastAIClientTest {
 
         FastApiForecastResponse fastApiResponse = FastApiForecastResponse.builder()
                 .category("R03")
+                .horizon(30)
                 .modelType("Prophet")
+                .modelVersion("v1.2.3")
                 .trend("increasing")
                 .seasonalityDetected(true)
                 .confidence(FastApiConfidence.builder()
@@ -86,11 +94,48 @@ class FastApiForecastAIClientTest {
                 ))
                 .build();
 
+        com.team24.pharma.dto.FastApiDecisionIntelligenceResponse diResponse = com.team24.pharma.dto.FastApiDecisionIntelligenceResponse.builder()
+                .riskAssessment(com.team24.pharma.dto.FastApiRiskAssessment.builder()
+                        .stockoutRisk("HIGH")
+                        .expiryRisk("LOW")
+                        .priorityScore(new BigDecimal("8.5"))
+                        .patientImpactPriority("CRITICAL")
+                        .avgDailyDemand(new BigDecimal("120.5"))
+                        .daysOfSupply(new BigDecimal("14.2"))
+                        .build())
+                .recommendations(List.of(
+                        com.team24.pharma.dto.FastApiRecommendation.builder()
+                                .strategy("Expedite")
+                                .action("Air freight")
+                                .reason("Critical")
+                                .humanApprovalRequired(true)
+                                .build(),
+                        com.team24.pharma.dto.FastApiRecommendation.builder()
+                                .strategy("Reallocate")
+                                .action("Move from West region")
+                                .reason("Surplus available")
+                                .humanApprovalRequired(false)
+                                .build(),
+                        com.team24.pharma.dto.FastApiRecommendation.builder()
+                                .strategy("Substitute")
+                                .action("Offer generic equivalent")
+                                .reason("Acceptable alternative")
+                                .humanApprovalRequired(false)
+                                .build()
+                ))
+                .build();
+
         when(restClient.post()).thenReturn(requestBodyUriSpec);
         when(requestBodyUriSpec.uri(eq("/forecast"))).thenReturn(requestBodySpec);
         when(requestBodySpec.body(any(ForecastRequest.class))).thenReturn(requestBodySpec);
         when(requestBodySpec.retrieve()).thenReturn(responseSpec);
         when(responseSpec.body(FastApiForecastResponse.class)).thenReturn(fastApiResponse);
+
+        when(restClient.get()).thenReturn(requestHeadersUriSpec);
+        when(requestHeadersUriSpec.uri(eq("/decision-intelligence/{category}?horizon={horizon}"), eq("R03"), eq(30)))
+                .thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.body(com.team24.pharma.dto.FastApiDecisionIntelligenceResponse.class)).thenReturn(diResponse);
 
         // Act
         ForecastResponse result = client.getForecast(request);
@@ -98,7 +143,9 @@ class FastApiForecastAIClientTest {
         // Assert
         assertThat(result).isNotNull();
         assertThat(result.getCategory()).isEqualTo("R03");
+        assertThat(result.getHorizon()).isEqualTo(30);
         assertThat(result.getModel()).isEqualTo("Prophet");
+        assertThat(result.getModelVersion()).isEqualTo("v1.2.3");
         assertThat(result.getTrend()).isEqualTo("increasing");
         assertThat(result.getSeasonality()).isEqualTo("detected");
         assertThat(result.getConfidenceScore()).isEqualByComparingTo(new BigDecimal("0.9500"));
@@ -120,6 +167,32 @@ class FastApiForecastAIClientTest {
         assertThat(result.getMetrics()).isNotNull();
         assertThat(result.getMetrics().getWape()).isEqualByComparingTo(new BigDecimal("5.00"));
         assertThat(result.getMetrics().getSmape()).isEqualByComparingTo(new BigDecimal("3.12"));
+
+        // Assert DI mapping
+        assertThat(result.getRisk()).isNotNull();
+        assertThat(result.getRisk().getLevel()).isEqualTo("CRITICAL");
+        assertThat(result.getRisk().getScore()).isEqualByComparingTo(new BigDecimal("8.5"));
+        assertThat(result.getRisk().getType()).isEqualTo("Stockout");
+        assertThat(result.getRisk().getAvgDailyDemand()).isEqualByComparingTo(new BigDecimal("120.5"));
+        assertThat(result.getRisk().getDaysOfSupply()).isEqualByComparingTo(new BigDecimal("14.2"));
+
+        assertThat(result.getRecommendations()).isNotNull();
+        assertThat(result.getRecommendations()).hasSize(3);
+
+        assertThat(result.getRecommendations().get(0).getStrategy()).isEqualTo("Expedite");
+        assertThat(result.getRecommendations().get(0).getAction()).isEqualTo("Air freight");
+        assertThat(result.getRecommendations().get(0).getReason()).isEqualTo("Critical");
+        assertThat(result.getRecommendations().get(0).getHumanApprovalRequired()).isTrue();
+
+        assertThat(result.getRecommendations().get(1).getStrategy()).isEqualTo("Reallocate");
+        assertThat(result.getRecommendations().get(1).getAction()).isEqualTo("Move from West region");
+        assertThat(result.getRecommendations().get(1).getReason()).isEqualTo("Surplus available");
+        assertThat(result.getRecommendations().get(1).getHumanApprovalRequired()).isFalse();
+
+        assertThat(result.getRecommendations().get(2).getStrategy()).isEqualTo("Substitute");
+        assertThat(result.getRecommendations().get(2).getAction()).isEqualTo("Offer generic equivalent");
+        assertThat(result.getRecommendations().get(2).getReason()).isEqualTo("Acceptable alternative");
+        assertThat(result.getRecommendations().get(2).getHumanApprovalRequired()).isFalse();
     }
 
     @Test

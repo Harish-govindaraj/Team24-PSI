@@ -208,7 +208,7 @@ class SnakeCaseContractTest {
         assertThat(response.getMetrics()).isNull();
         assertThat(response.getExplanation()).isNull();
         assertThat(response.getRisk()).isNull();
-        assertThat(response.getRecommendation()).isNull();
+        assertThat(response.getRecommendations()).isNull();
 
         assertThat(response.getForecast()).hasSize(1);
         assertThat(response.getForecast().get(0).getPredictedSales())
