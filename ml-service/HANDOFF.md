@@ -167,13 +167,13 @@ All errors share one envelope:
 
 One of six per category, selected automatically by measured walk-forward WAPE: `naive`, `seasonal_naive`, `exponential_smoothing`, `sarima`, `xgboost`, `lightgbm`. **This build's actual per-category selections:**
 
-M01AB → sarima  
-M01AE → lightgbm  
-N02BA → sarima  
-N02BE → exponential_smoothing  
-N05B → sarima  
-N05C → naive  
-R03 → lightgbm  
+M01AB → sarima
+M01AE → lightgbm
+N02BA → sarima
+N02BE → exponential_smoothing
+N05B → sarima
+N05C → naive
+R03 → lightgbm
 R06 → lightgbm
 
 ## 6. Model version
