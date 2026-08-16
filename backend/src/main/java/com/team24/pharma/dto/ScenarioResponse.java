@@ -12,9 +12,9 @@ import lombok.NoArgsConstructor;
 public class ScenarioResponse {
 
     private String category;
-    private Integer nSimulations;
-    private Double supplyShockPct;
-    private Double stockoutProbability;
-    private Double meanShortfallUnits;
-    private String note;
+    private Integer nSimulations;
+    private Double supplyShockPct;
+    private Double stockoutProbability;
+    private Double meanShortfallUnits;
+    private String note;
 }

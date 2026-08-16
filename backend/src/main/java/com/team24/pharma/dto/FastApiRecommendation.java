@@ -16,7 +16,7 @@ public class FastApiRecommendation {
     private String strategy;
     private String action;
     private String reason;
-    // JSON is "humanApprovalRequired" (camelCase), but RestClient is SNAKE_CASE.
+    // JSON is "humanApprovalRequired" (camelCase), but RestClient is SNAKE_CASE.
     @JsonProperty("humanApprovalRequired")
     private Boolean humanApprovalRequired;
 }

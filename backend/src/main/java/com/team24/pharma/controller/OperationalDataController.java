@@ -21,7 +21,7 @@ public class OperationalDataController {
 
     @GetMapping("/{category}")
     public ResponseEntity<ApiResponse<OperationalDataResponse>> getOperationalData(@PathVariable String category) {
-        OperationalDataResponse response = forecastAIClient.getOperationalData(category);
+        OperationalDataResponse response = forecastAIClient.getOperationalData(category);
 
         return ResponseEntity.ok(ApiResponse.success(response, "Operational data retrieved successfully"));
     }

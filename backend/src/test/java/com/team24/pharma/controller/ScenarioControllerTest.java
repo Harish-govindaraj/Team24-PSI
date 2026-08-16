@@ -78,7 +78,7 @@ class ScenarioControllerTest {
 
     @Test
     void runScenario_invalidSupplyShockNegative_returns400() throws Exception {
-        // Validation missing in ScenarioRequest, but I didn't add Negative validation yet. Wait!        // The prompt asked: validation failure for supplyShockPct < 0, validation failure for supplyShockPct > 0.95.
+        // Validation missing in ScenarioRequest, but I didn't add Negative validation yet. Wait!        // The prompt asked: validation failure for supplyShockPct < 0, validation failure for supplyShockPct > 0.95.
         // Let me add the missing @Min @Max to ScenarioRequest later or just expect BadRequest if I add it.
         mockMvc.perform(post("/api/scenarios")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -107,7 +107,7 @@ class ScenarioControllerTest {
                         """))
                 .andExpect(status().isBadRequest());
     }
-    @Test
+    @Test
     void runScenario_invalidSimulationsLow_returns400() throws Exception {
         mockMvc.perform(post("/api/scenarios")
                 .contentType(MediaType.APPLICATION_JSON)

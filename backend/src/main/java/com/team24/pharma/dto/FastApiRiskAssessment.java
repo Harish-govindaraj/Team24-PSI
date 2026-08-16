@@ -15,11 +15,11 @@ public class FastApiRiskAssessment {
 
     // JSON is "stockout_risk", SNAKE_CASE strategy maps to stockoutRisk
     private String stockoutRisk;
-    // JSON is "expiry_risk", SNAKE_CASE strategy maps to expiryRisk
+    // JSON is "expiry_risk", SNAKE_CASE strategy maps to expiryRisk
     private String expiryRisk;
-    // JSON is "priority_score", SNAKE_CASE strategy maps to priorityScore
+    // JSON is "priority_score", SNAKE_CASE strategy maps to priorityScore
     private BigDecimal priorityScore;
-    // JSON is "patient_impact_priority", SNAKE_CASE strategy maps to patientImpactPriority
+    // JSON is "patient_impact_priority", SNAKE_CASE strategy maps to patientImpactPriority
     private String patientImpactPriority;
 
     @com.fasterxml.jackson.annotation.JsonProperty("avg_daily_demand")

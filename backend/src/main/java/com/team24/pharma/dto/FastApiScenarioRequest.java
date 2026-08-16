@@ -12,10 +12,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class FastApiScenarioRequest {
-    private String category;
-    private Integer horizon;
-    @JsonProperty("supplyShockPct")
+    private String category;
+    private Integer horizon;
+    @JsonProperty("supplyShockPct")
     private Double supplyShockPct;
-    @JsonProperty("nSimulations")
+    @JsonProperty("nSimulations")
     private Integer nSimulations;
 }

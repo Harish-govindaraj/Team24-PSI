@@ -14,13 +14,13 @@ import lombok.NoArgsConstructor;
 public class FastApiScenarioResponse {
 
     private String category;
-    @JsonProperty("nSimulations")
+    @JsonProperty("nSimulations")
     private Integer nSimulations;
-    @JsonProperty("supplyShockPct")
+    @JsonProperty("supplyShockPct")
     private Double supplyShockPct;
-    @JsonProperty("stockoutProbability")
+    @JsonProperty("stockoutProbability")
     private Double stockoutProbability;
-    @JsonProperty("meanShortfallUnits")
+    @JsonProperty("meanShortfallUnits")
     private Double meanShortfallUnits;
-    private String note;
+    private String note;
 }

@@ -23,7 +23,7 @@ public class ScenarioController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<ScenarioResponse>> runScenario(@Valid @RequestBody ScenarioRequest request) {
-        ScenarioResponse response = forecastAIClient.runScenario(request);
+        ScenarioResponse response = forecastAIClient.runScenario(request);
 
         return ResponseEntity.ok(ApiResponse.success(response, "Scenario simulation completed successfully"));
     }
