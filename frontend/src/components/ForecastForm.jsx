@@ -13,7 +13,7 @@ const CATEGORIES = [
   { code: 'R06', label: 'Antihistamines for systemic use' }
 ];
 
-function ForecastForm({ onSubmit, isLoading }) {
+function ForecastForm({ onSubmit, isLoading, submitLabel = 'Generate Forecast', loadingLabel = 'Generating...' }) {
   const [category, setCategory] = useState('');
   const [horizon, setHorizon] = useState('');
 
@@ -25,11 +25,14 @@ function ForecastForm({ onSubmit, isLoading }) {
   };
 
   return (
-    <div className="forecast-form-card">
-      <form onSubmit={handleSubmit} className="forecast-form">
+    <div>
+      <div className="card-header" style={{ padding: 'var(--space-4) var(--space-6)', borderBottom: '1px solid var(--psi-border)', margin: 'calc(var(--space-6) * -1) calc(var(--space-6) * -1) var(--space-4) calc(var(--space-6) * -1)' }}>
+        <h3 className="card-title text-primary" style={{ fontSize: '1.1rem' }}>Configuration</h3>
+      </div>
+      <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label htmlFor="category">Product Category</label>
-          <select            id="category"            value={category}            onChange={(e) => setCategory(e.target.value)}
+          <label htmlFor="category" className="form-label">Product Category</label>
+          <select id="category" className="form-control" value={category} onChange={(e) => setCategory(e.target.value)}
             disabled={isLoading}
             required
           >
@@ -42,9 +45,9 @@ function ForecastForm({ onSubmit, isLoading }) {
           </select>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="horizon">Forecast Horizon</label>
-          <select            id="horizon"            value={horizon}            onChange={(e) => setHorizon(e.target.value)}
+        <div className="form-group" style={{ marginBottom: 'var(--space-6)' }}>
+          <label htmlFor="horizon" className="form-label">Forecast Horizon</label>
+          <select id="horizon" className="form-control" value={horizon} onChange={(e) => setHorizon(e.target.value)}
             disabled={isLoading}
             required
           >
@@ -55,10 +58,8 @@ function ForecastForm({ onSubmit, isLoading }) {
           </select>
         </div>
 
-        <button          type="submit"          disabled={isLoading || !category || !horizon}
-          className="generate-btn"
-        >
-          {isLoading ? 'Generating forecast...' : 'Generate Forecast'}
+        <button type="submit" disabled={isLoading || !category || !horizon} className="btn btn-primary" style={{ width: '100%' }}>
+          {isLoading ? loadingLabel : submitLabel}
         </button>
       </form>
     </div>

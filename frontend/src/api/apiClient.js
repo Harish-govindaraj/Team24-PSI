@@ -4,6 +4,10 @@
  */
 
 export async function authenticatedFetch(url, options = {}) {
+  // Ensure we hit the backend directly, not the unproxied Vite dev server
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+  const fullUrl = url.startsWith('/') ? `${API_BASE_URL}${url}` : url;
+
   // Read token at request time
   const token = localStorage.getItem('jwt_token');
 
@@ -29,7 +33,7 @@ export async function authenticatedFetch(url, options = {}) {
 
   let response;
   try {
-    response = await fetch(url, fetchOptions);
+    response = await fetch(fullUrl, fetchOptions);
   } catch (error) {
     if (error instanceof TypeError && error.message.includes('fetch')) {
       throw new Error('Unable to connect to PSI backend.');
@@ -52,7 +56,7 @@ export async function authenticatedFetch(url, options = {}) {
   let jsonResponse;
   try {
     jsonResponse = await response.json();
-  } catch (e) {
+  } catch (_e) {
     throw new Error('Received an invalid response from the backend.');
   }
 
@@ -62,8 +66,13 @@ export async function authenticatedFetch(url, options = {}) {
     throw new Error(errorMessage);
   }
 
-  if (!jsonResponse.success || !jsonResponse.data) {
+  if (!jsonResponse.success) {
     throw new Error('Unexpected response format from backend.');
+  }
+
+  // If success is true but data doesn't exist, return the whole response object
+  if (jsonResponse.data === undefined) {
+    return jsonResponse;
   }
 
   return jsonResponse.data;

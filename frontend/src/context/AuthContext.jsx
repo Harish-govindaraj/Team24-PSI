@@ -7,20 +7,15 @@ const AuthContext = createContext({
   token: null,
   user: null,
   role: null,
+  verificationStatus: null,
   isAuthenticated: false,
   login: () => {},
   logout: () => {},
   register: () => {}
 });
 
-/**
- * Safely decodes a JWT payload and extracts sub (email), role, and exp.
- *
- * @param {string} token
- * @returns {Object|null} Decoded payload or null if invalid
- */
 function decodeJwtPayload(token) {
-  if (!token) return null;
+  if (!token || typeof token !== 'string') return null;
 
   try {
     const parts = token.split('.');
@@ -42,9 +37,18 @@ function decodeJwtPayload(token) {
 
     const parsed = JSON.parse(jsonPayload);
 
+    // Hardened defensive checks
+    if (!parsed || typeof parsed !== 'object') return null;
+    if (!parsed.sub || typeof parsed.sub !== 'string') return null;
+    if (!parsed.role || typeof parsed.role !== 'string') return null;
+    if (parsed.exp === undefined || typeof parsed.exp !== 'number' || isNaN(parsed.exp)) return null;
+
     return {
+      id: parsed.userId,
+      fullName: parsed.fullName,
       email: parsed.sub,
       role: parsed.role,
+      verificationStatus: parsed.verificationStatus,
       expiry: parsed.exp
     };
   } catch (e) {
@@ -58,6 +62,7 @@ export const AuthProvider = ({ children }) => {
     token: null,
     user: null,
     role: null,
+    verificationStatus: null,
     isAuthenticated: false
   });
 
@@ -67,6 +72,7 @@ export const AuthProvider = ({ children }) => {
       token: null,
       user: null,
       role: null,
+      verificationStatus: null,
       isAuthenticated: false
     });
   }, []);
@@ -89,8 +95,13 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem(TOKEN_KEY, token);
     setAuthState({
       token,
-      user: { email: decoded.email },
+      user: { 
+        id: decoded.id, 
+        fullName: decoded.fullName, 
+        email: decoded.email 
+      },
       role: decoded.role,
+      verificationStatus: decoded.verificationStatus,
       isAuthenticated: true
     });
   }, [logout]);

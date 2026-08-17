@@ -26,7 +26,8 @@ describe('ScenarioPanel', () => {
   it('displays percentage formatting correctly for supply shock input', () => {
     render(<ScenarioPanel category="R03" horizon={14} />);
     // Default is 0.3 -> 30%
-    expect(screen.getByText(/Supply Shock \(Inventory Lost\):/)).toHaveTextContent('30%');
+    const label = screen.getByText('Supply Shock (Inventory Lost)').parentElement;
+    expect(label).toHaveTextContent('30%');
   });
 
   it('formats stockout-probability correctly when result is provided', () => {

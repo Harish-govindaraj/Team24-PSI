@@ -1,0 +1,131 @@
+.layout-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--psi-background);
+}
+
+.sidebar {
+  width: 260px;
+  background-color: var(--psi-surface);
+  border-right: 1px solid var(--psi-border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+}
+
+.sidebar-header {
+  padding: var(--space-5);
+  border-bottom: 1px solid var(--psi-border);
+}
+
+.sidebar-header h2 {
+  margin: 0;
+  color: var(--psi-primary);
+  font-size: 1.5rem;
+  letter-spacing: -0.025em;
+}
+
+.sidebar-subtitle {
+  font-size: 0.8rem;
+  color: var(--psi-text-muted);
+  font-weight: 500;
+}
+
+.sidebar-nav {
+  padding: var(--space-4) 0;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: var(--space-3) var(--space-5);
+  color: var(--psi-text-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  border-left: 3px solid transparent;
+  transition: all 0.2s;
+}
+
+.nav-item:hover {
+  background-color: var(--psi-background);
+  color: var(--psi-text-primary);
+}
+
+.nav-item.active {
+  background-color: #f0f7ff;
+  color: var(--psi-primary);
+  border-left-color: var(--psi-primary);
+}
+
+.nav-icon {
+  margin-right: var(--space-3);
+  font-size: 1.1rem;
+}
+
+.sidebar-footer {
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--psi-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.user-email {
+  font-size: 0.85rem;
+  color: var(--psi-text-primary);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-role-badge {
+  align-self: flex-start;
+}
+
+.logout-btn {
+  width: 100%;
+}
+
+.main-content {
+  flex: 1;
+  margin-left: 260px; /* Offset for fixed sidebar */
+  padding: var(--space-6);
+  min-width: 0; /* Prevent overflow */
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .layout-container {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    width: 100%;
+    position: static;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--psi-border);
+  }
+  
+  .sidebar-nav {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  
+  .main-content {
+    margin-left: 0;
+    padding: var(--space-4);
+  }
+}

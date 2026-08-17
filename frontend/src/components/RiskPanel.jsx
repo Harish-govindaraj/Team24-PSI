@@ -3,8 +3,8 @@ import React from 'react';
 function RiskPanel({ risk }) {
   if (!risk) {
     return (
-      <div className="risk-card">
-        <h3>Risk Assessment</h3>
+      <div className="card risk-card">
+        <h3 className="card-title text-primary">Risk Assessment</h3>
         <p>No information available.</p>
       </div>
     );
@@ -19,8 +19,8 @@ function RiskPanel({ risk }) {
   else if (level === 'CRITICAL') levelColor = '#991b1b';
 
   return (
-    <div className="risk-card" style={{ borderLeft: `4px solid ${levelColor}` }}>
-      <h3>Risk Assessment</h3>
+    <div className="card risk-card">
+      <h3 className="card-title text-primary">Risk Assessment</h3>
       <div className="risk-content">
         <p>
           <strong>Risk Level:</strong>{' '}
