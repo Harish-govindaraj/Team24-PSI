@@ -3,7 +3,7 @@ import React from 'react';
 function ForecastSummary({ data }) {
   if (!data) return null;
 
-  const horizon = data.forecast && data.forecast.length ? `${data.forecast.length} days` : 'N/A';
+  const horizon = data.horizon ? `${data.horizon} days` : 'N/A';
   const confidence = data.confidenceScore != null ? `${(data.confidenceScore * 100).toFixed(1)}%` : 'N/A';
 
   return (
@@ -17,6 +17,10 @@ function ForecastSummary({ data }) {
         <div className="summary-item">
           <span className="summary-label">Model</span>
           <span className="summary-value">{data.model || 'N/A'}</span>
+        </div>
+        <div className="summary-item">
+          <span className="summary-label">Model Version</span>
+          <span className="summary-value">{data.modelVersion || 'N/A'}</span>
         </div>
         <div className="summary-item">
           <span className="summary-label">Forecast Horizon</span>

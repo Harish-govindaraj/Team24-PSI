@@ -18,7 +18,9 @@ import lombok.NoArgsConstructor;
 public class ForecastResponse {
 
     private String category;
+    private Integer horizon;
     private String model;
+    private String modelVersion;
     private String trend;
     private String seasonality;
     private BigDecimal confidenceScore;
@@ -26,5 +28,5 @@ public class ForecastResponse {
     private ModelMetrics metrics;
     private List<ExplanationItem> explanation;
     private RiskResponse risk;
-    private RecommendationResponse recommendation;
+    private List<RecommendationResponse> recommendations;
 }

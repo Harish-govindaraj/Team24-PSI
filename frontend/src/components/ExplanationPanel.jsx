@@ -24,9 +24,7 @@ function ExplanationPanel({ explanation }) {
       <ul className="explanation-list">
         {explanation.map((item, index) => (
           <li key={index} className="explanation-item">
-            <strong>{item.feature || 'Unknown Feature'}</strong>: 
-            Importance {formatValue(item.importance)}, 
-            Direction: {item.direction || 'N/A'}
+            <strong>{item.feature || 'Unknown Feature'}</strong>:            Importance {formatValue(item.importance)}
           </li>
         ))}
       </ul>

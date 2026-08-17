@@ -17,4 +17,6 @@ public class RiskResponse {
     private BigDecimal score;
     private String type;
     private String reason;
+    private BigDecimal avgDailyDemand;
+    private BigDecimal daysOfSupply;
 }

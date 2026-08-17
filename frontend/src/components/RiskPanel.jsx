@@ -29,6 +29,8 @@ function RiskPanel({ risk }) {
         <p><strong>Type:</strong> {risk.type || 'N/A'}</p>
         <p><strong>Score:</strong> {risk.score != null ? risk.score : 'N/A'}</p>
         <p><strong>Reason:</strong> {risk.reason || 'N/A'}</p>
+        <p><strong>Average Daily Demand:</strong> {risk.avgDailyDemand != null ? `${risk.avgDailyDemand} units` : 'N/A'}</p>
+        <p><strong>Days of Supply:</strong> {risk.daysOfSupply != null ? `${risk.daysOfSupply} days` : 'N/A'}</p>
       </div>
     </div>
   );
