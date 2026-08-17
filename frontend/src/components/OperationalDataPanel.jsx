@@ -3,8 +3,8 @@ import React from 'react';
 function OperationalDataPanel({ operationalData }) {
   if (!operationalData) {
     return (
-      <div className="operational-card">
-        <h3>Operational Data</h3>
+      <div className="card operational-card">
+        <h3 className="card-title text-primary">Operational Data</h3>
         <p>No operational data available.</p>
       </div>
     );
@@ -14,8 +14,8 @@ function OperationalDataPanel({ operationalData }) {
   const formatBool = (val) => (val ? 'Yes' : 'No');
 
   return (
-    <div className="operational-card">
-      <h3>Operational Data {operationalData.isSynthetic && <span className="synthetic-badge">(Synthetic/Demo)</span>}</h3>
+    <div className="card operational-card">
+      <h3 className="card-title text-primary">Operational Data {operationalData.isSynthetic && <span className="synthetic-badge">(Synthetic/Demo)</span>}</h3>
       <div className="operational-content">
         <p><strong>Category:</strong> {operationalData.category || 'N/A'}</p>
         <p><strong>Region:</strong> {operationalData.region || 'N/A'}</p>

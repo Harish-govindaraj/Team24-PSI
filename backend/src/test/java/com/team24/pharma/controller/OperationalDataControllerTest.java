@@ -20,8 +20,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+
 @WebMvcTest(OperationalDataController.class)
-@Import(SecurityConfig.class)
+@AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 class OperationalDataControllerTest {
 
@@ -30,6 +32,9 @@ class OperationalDataControllerTest {
 
     @MockitoBean
     private ForecastAIClient forecastAIClient;
+
+    @org.springframework.test.context.bean.override.mockito.MockitoBean 
+    private com.team24.pharma.security.JwtService jwtService;
 
     @Test
     void getOperationalData_returnsApiResponse() throws Exception {

@@ -1,6 +1,7 @@
 package com.team24.pharma.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/scenarios")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('PHARMA_COMPANY_OWNER', 'ADMIN')")
 public class ScenarioController {
 
     private final ForecastAIClient forecastAIClient;

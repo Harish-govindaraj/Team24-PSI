@@ -1,6 +1,7 @@
 package com.team24.pharma.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/operational-data")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('PHARMA_SHOP_OWNER', 'PHARMA_COMPANY_OWNER', 'ADMIN')")
 public class OperationalDataController {
 
     private final ForecastAIClient forecastAIClient;

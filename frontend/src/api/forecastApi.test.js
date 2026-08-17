@@ -28,13 +28,16 @@ describe('forecastApi', () => {
       expect.stringContaining('/api/forecasts'),
       expect.objectContaining({
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
         body: JSON.stringify(request)
       })
     );
+
+    // Check headers
+    const callArgs = global.fetch.mock.calls[0][1];
+    const headers = new Headers(callArgs.headers);
+    expect(headers.get('Content-Type')).toBe('application/json');
+    expect(headers.get('Accept')).toBe('application/json');
+
     expect(result).toEqual(mockResponse.data);
   });
 

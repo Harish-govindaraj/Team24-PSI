@@ -24,8 +24,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+
 @WebMvcTest(ScenarioController.class)
-@Import(SecurityConfig.class)
+@AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 class ScenarioControllerTest {
 
@@ -34,6 +36,10 @@ class ScenarioControllerTest {
 
     @MockitoBean
     private ForecastAIClient forecastAIClient;
+
+    @org.springframework.test.context.bean.override.mockito.MockitoBean 
+    private com.team24.pharma.security.JwtService jwtService;
+
 
     @Test
     void runScenario_validRequest_returns200() throws Exception {
