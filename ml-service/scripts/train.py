@@ -22,11 +22,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # lets `app.*` imports work when run as a script
 
 import pandas as pd
+import numpy as np
 
 from app.utils.data_loader import load_raw_sales_data, get_category_series, CATEGORY_COLUMNS
 from app.utils.stats import compute_series_stats
 from app.models.baseline import (
-    NaiveForecaster, SeasonalNaiveForecaster, ExponentialSmoothingForecaster, SARIMAForecaster,
+    NaiveForecaster, SeasonalNaiveForecaster, ExponentialSmoothingForecaster, SARIMAForecaster, CrostonForecaster, CrostonTSBForecaster
 )
 from app.models.ml_models import XGBoostForecaster, LightGBMForecaster
 from app.models.evaluation import evaluate_model_walk_forward
@@ -40,28 +41,35 @@ CANDIDATE_MODELS = {
     "seasonal_naive": lambda: SeasonalNaiveForecaster(season_length=7),
     "exponential_smoothing": lambda: ExponentialSmoothingForecaster(seasonal_periods=7),
     "sarima": lambda: SARIMAForecaster(),
+    "croston": lambda: CrostonForecaster(),
+    "croston_tsb": lambda: CrostonTSBForecaster(),
     "xgboost": lambda: XGBoostForecaster(),
     "lightgbm": lambda: LightGBMForecaster(),
 }
 
 
-def select_best_model(category: str, series: pd.Series):
+def select_best_model(category: str, series: pd.Series, stats):
     """
-    Runs walk-forward validation for EVERY candidate on this category,
-    ranks by mean WAPE (lower is better - it's the most stakeholder-
-    interpretable metric: "off by X% of total volume"). Intermittent
-    (N05C-style, high zero-demand) and volatile (R03-style, high CV)
-    categories are NOT special-cased with a different candidate pool -
-    they get evaluated fairly against all six models, and in practice
-    naive/seasonal_naive often win on highly intermittent series
-    precisely because complex models overfit noise. We measure this
-    rather than assume it.
+    Runs walk-forward validation for candidate models on this category.
+    Candidate models are pre-filtered based on strict demand classification
+    (ADI and CV2) to ensure models are evaluated on data they are theoretically
+    suited for.
     """
+    
+    if stats.demand_classification == "Stable":
+        candidates = ["sarima", "xgboost", "lightgbm", "exponential_smoothing", "seasonal_naive"]
+    elif stats.demand_classification == "Intermittent":
+        candidates = ["croston_tsb", "croston", "naive"]
+    else:
+        # Volatile (Erratic or Lumpy) - evaluate everything as it's hard to predict
+        candidates = list(CANDIDATE_MODELS.keys())
+
     results = {}
-    for model_name, factory in CANDIDATE_MODELS.items():
+    for model_name in candidates:
+        factory = CANDIDATE_MODELS[model_name]
         wf_result = evaluate_model_walk_forward(
             factory, series, model_name=model_name, category=category,
-            initial_train_size=120, horizon=7, step=14, max_folds=20,
+            initial_train_size=120, horizon=30, step=14, max_folds=20,
         )
         if not wf_result.folds:
             logger.warning("  %-22s produced NO valid folds - skipping", model_name)
@@ -69,13 +77,18 @@ def select_best_model(category: str, series: pd.Series):
         results[model_name] = wf_result
         logger.info(
             "  %-22s WAPE=%6.2f%%  sMAPE=%6.2f%%  MAE=%7.2f  (%d folds)",
-            model_name, wf_result.mean_wape, wf_result.mean_smape, wf_result.mean_mae, len(wf_result.folds),
+            model_name, wf_result.global_wape, wf_result.mean_smape, wf_result.mean_mae, len(wf_result.folds),
         )
 
     if not results:
         raise RuntimeError(f"No model produced valid results for '{category}' - check the series length.")
 
-    best_name = min(results, key=lambda name: results[name].mean_wape)
+    # Rank by global WAPE. If global WAPE is undefined or infinite, fallback to MAE.
+    import math
+    best_name = min(results, key=lambda name: (
+        results[name].global_wape if math.isfinite(results[name].global_wape) else float('inf'),
+        results[name].mean_mae
+    ))
     return best_name, results[best_name]
 
 
@@ -92,18 +105,18 @@ def main():
         stats = compute_series_stats(series, category)
 
         flags = []
-        if stats.zero_demand_pct > 50:
+        if stats.demand_classification == "Intermittent":
             flags.append("INTERMITTENT")
-        if stats.volatility_cv > 1:
+        if stats.demand_classification == "Volatile":
             flags.append("VOLATILE")
         logger.info(
-            "  stats: mean=%.2f zero%%=%.1f cv=%.2f trend=%.4f %s",
-            stats.mean, stats.zero_demand_pct, stats.volatility_cv, stats.trend_slope,
+            "  stats: class=%s conf=%.1f%% mean=%.2f zero%%=%.1f adi=%.2f cv2=%.2f trend=%.4f %s",
+            stats.demand_classification, stats.classification_confidence, stats.mean, stats.zero_demand_pct, stats.adi, stats.cv2, stats.trend_slope,
             ("[" + ",".join(flags) + "]") if flags else "",
         )
 
-        best_name, best_result = select_best_model(category, series)
-        logger.info("  -> SELECTED: %s (WAPE=%.2f%%)", best_name, best_result.mean_wape)
+        best_name, best_result = select_best_model(category, series, stats)
+        logger.info("  -> SELECTED: %s (WAPE=%.2f%%)", best_name, best_result.global_wape)
 
         # Refit the WINNING model type on the full series - this final
         # fit is what actually gets served, not any single fold's model.
@@ -114,7 +127,7 @@ def main():
         summary_rows.append({
             "category": category,
             "model": best_name,
-            "wape_pct": entry.mean_wape,
+            "wape_pct": entry.global_wape,
             "smape_pct": entry.mean_smape,
             "mae": entry.mean_mae,
             "flags": ",".join(flags) if flags else "-",

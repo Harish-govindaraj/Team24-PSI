@@ -14,6 +14,11 @@ import lombok.NoArgsConstructor;
 public class ModelMetrics {
 
     private BigDecimal mae;
-    private BigDecimal smape;
     private BigDecimal wape;
+    private BigDecimal smape;
+    private BigDecimal rmse;
+    private BigDecimal mase;
+    private BigDecimal bias;
+    private BigDecimal trendAccuracy;
+    private BigDecimal picp;
 }

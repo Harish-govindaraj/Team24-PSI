@@ -57,3 +57,15 @@ export async function runScenario(request) {
     body: JSON.stringify(request)
   });
 }
+
+/**
+ * Fetches the ML quality report for a specific product category from the Spring Boot backend.
+ *
+ * @param {string} category - The product category code (e.g., 'R03')
+ * @returns {Promise<Object>} - The quality report data
+ */
+export async function getQualityReport(category) {
+  return authenticatedFetch(`${API_BASE_URL}/api/forecasts/${encodeURIComponent(category)}/quality-report`, {
+    method: 'GET'
+  });
+}

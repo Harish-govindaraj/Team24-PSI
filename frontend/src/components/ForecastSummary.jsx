@@ -27,8 +27,14 @@ function ForecastSummary({ data }) {
           <span className="summary-value">{horizon}</span>
         </div>
         <div className="summary-item">
-          <span className="summary-label">Confidence</span>
-          <span className="summary-value">{confidence}</span>
+          <span className="summary-label">Forecast Reliability</span>
+          <span className="summary-value">
+            {data.confidenceInfo?.category || 'N/A'} 
+            {data.confidenceInfo?.score != null ? ` (${data.confidenceInfo.score.toFixed(1)}/100)` : ''}
+          </span>
+          <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--psi-text-muted)', marginTop: '4px' }}>
+            {data.confidenceInfo?.reason || 'Based on multi-factor validation'}
+          </span>
         </div>
         <div className="summary-item">
           <span className="summary-label">Trend</span>
@@ -36,7 +42,19 @@ function ForecastSummary({ data }) {
         </div>
         <div className="summary-item">
           <span className="summary-label">Seasonality</span>
-          <span className="summary-value">{data.seasonality || 'N/A'}</span>
+          <span className="summary-value">
+            {data.seasonality?.type === 'insufficient_data' && 'Insufficient historical data'}
+            {data.seasonality?.type === 'none' && 'None detected'}
+            {data.seasonality?.detected && (
+              <>
+                {data.seasonality.type === 'weekly' ? 'Weekly (7-day)' : '30-day periodicity'}
+                <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--psi-text-muted)', marginTop: '4px' }}>
+                  Strength: {data.seasonality.strength?.toFixed(4)}
+                </span>
+              </>
+            )}
+            {!data.seasonality && 'N/A'}
+          </span>
         </div>
       </div>
     </div>

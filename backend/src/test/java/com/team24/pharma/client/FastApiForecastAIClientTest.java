@@ -20,6 +20,7 @@ import com.team24.pharma.dto.FastApiForecastResponse;
 import com.team24.pharma.dto.ForecastPoint;
 import com.team24.pharma.dto.ForecastRequest;
 import com.team24.pharma.dto.ForecastResponse;
+import com.team24.pharma.dto.SeasonalityInfo;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -69,12 +70,15 @@ class FastApiForecastAIClientTest {
                 .modelType("Prophet")
                 .modelVersion("v1.2.3")
                 .trend("increasing")
-                .seasonalityDetected(true)
+                .seasonality(SeasonalityInfo.builder().detected(true).type("weekly").period(7).strength(0.45).build())
                 .confidence(FastApiConfidence.builder()
                         .meanMae(new BigDecimal("12.34"))
                         .meanWapePct(new BigDecimal("5.00"))
                         .meanSmapePct(new BigDecimal("3.12"))
-                        .method("walk_forward_wape")
+                        .method("multi_factor")
+                        .reliabilityScore(new BigDecimal("95.00"))
+                        .reliabilityCategory("High")
+                        .reliabilityReason("High confidence due to low error")
                         .build())
                 .explanation(FastApiExplanation.builder()
                         .available(true)
@@ -148,8 +152,9 @@ class FastApiForecastAIClientTest {
         assertThat(result.getModel()).isEqualTo("Prophet");
         assertThat(result.getModelVersion()).isEqualTo("v1.2.3");
         assertThat(result.getTrend()).isEqualTo("increasing");
-        assertThat(result.getSeasonality()).isEqualTo("detected");
-        assertThat(result.getConfidenceScore()).isEqualByComparingTo(new BigDecimal("0.9500"));
+        assertThat(result.getSeasonality().getDetected()).isTrue();
+        assertThat(result.getSeasonality().getType()).isEqualTo("weekly");
+        assertThat(result.getConfidenceInfo().getScore()).isEqualByComparingTo(new BigDecimal("95.00"));
         assertThat(result.getForecast()).hasSize(1);
 
         ForecastPoint point = result.getForecast().get(0);
@@ -159,9 +164,9 @@ class FastApiForecastAIClientTest {
         assertThat(point.getUpperBound()).isEqualByComparingTo(new BigDecimal("1800.00"));
 
         // Assert explanation mapping
-        assertThat(result.getExplanation()).hasSize(1);
-        assertThat(result.getExplanation().get(0).getFeature()).isEqualTo("day_of_week");
-        assertThat(result.getExplanation().get(0).getImportance())
+        assertThat(result.getExplanation().getTopFeatures()).hasSize(1);
+        assertThat(result.getExplanation().getTopFeatures().get(0).getFeature()).isEqualTo("day_of_week");
+        assertThat(result.getExplanation().getTopFeatures().get(0).getImportance())
                 .isEqualByComparingTo(new BigDecimal("0.337"));
 
         // Assert metrics mapping
@@ -213,7 +218,7 @@ class FastApiForecastAIClientTest {
         // Act & Assert
         assertThatThrownBy(() -> client.getForecast(request))
                 .isInstanceOf(AiServiceException.class)
-                .hasMessageContaining("Failed to get forecast from AI service");
+                .hasMessageContaining("AI forecasting service temporarily unavailable");
     }
 
     @Test

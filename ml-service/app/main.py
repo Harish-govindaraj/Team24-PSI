@@ -103,6 +103,38 @@ def forecast(payload: ForecastRequest) -> dict:
         )
 
 
+@app.get("/quality-report/{category}")
+def quality_report(category: str) -> dict:
+    from app.services.forecast_service import generate_quality_report
+    try:
+        return generate_quality_report(category)
+    except CategoryNotFoundError as exc:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "code": "CATEGORY_NOT_FOUND",
+                "message": str(exc),
+            },
+        )
+    except ModelNotTrainedError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "code": "MODEL_NOT_TRAINED",
+                "message": str(exc),
+            },
+        )
+    except Exception:
+        logger.exception("Unexpected error generating quality report for category=%s", category)
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "code": "INTERNAL_ERROR",
+                "message": "An unexpected error occurred.",
+            },
+        )
+
+
 # ============================================================
 # STEP 4 — Decision-intelligence endpoints
 # ============================================================

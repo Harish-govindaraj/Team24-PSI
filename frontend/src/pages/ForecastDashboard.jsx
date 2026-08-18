@@ -8,7 +8,8 @@ import ExplanationPanel from '../components/ExplanationPanel';
 import RiskPanel from '../components/RiskPanel';
 import RecommendationPanel from '../components/RecommendationPanel';
 import OperationalDataPanel from '../components/OperationalDataPanel';
-import { generateForecast, getHistoricalSales, getOperationalData } from '../api/forecastApi';
+import QualityReportCard from '../components/QualityReportCard';
+import { generateForecast, getHistoricalSales, getOperationalData, getQualityReport } from '../api/forecastApi';
 import { useAuth } from '../context/AuthContext';
 
 function ForecastDashboard() {
@@ -22,6 +23,7 @@ function ForecastDashboard() {
   const [forecastResponse, setForecastResponse] = useState(null);
   const [historicalSales, setHistoricalSales] = useState([]);
   const [operationalData, setOperationalData] = useState(null);
+  const [qualityReport, setQualityReport] = useState(null);
 
   const handleGenerateForecast = async (request) => {
     setLoading(true);
@@ -29,9 +31,10 @@ function ForecastDashboard() {
     setForecastResponse(null);
     setHistoricalSales([]);
     setOperationalData(null);
+    setQualityReport(null);
 
     try {
-      const [forecastData, historyData, opData] = await Promise.all([
+      const [forecastData, historyData, opData, qrData] = await Promise.all([
         generateForecast(request),
         getHistoricalSales(request.category).catch(err => {
           console.error("Failed to fetch historical sales:", err);
@@ -40,12 +43,17 @@ function ForecastDashboard() {
         getOperationalData(request.category).catch(err => {
           console.error("Failed to fetch operational data:", err);
           return null;
+        }),
+        getQualityReport(request.category).catch(err => {
+          console.error("Failed to fetch quality report:", err);
+          return null;
         })
       ]);
 
       setForecastResponse(forecastData);
       setHistoricalSales(historyData);
       setOperationalData(opData);
+      setQualityReport(qrData);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -92,18 +100,26 @@ function ForecastDashboard() {
           {forecastResponse && (
             <>
               <ForecastSummary data={forecastResponse} />
+
               
               <div className="card" style={{ padding: 'var(--space-5)', width: '100%', overflowX: 'auto' }}>
                 <h3 className="text-primary" style={{ margin: '0 0 var(--space-4) 0', fontSize: '1.25rem' }}>Forecast vs Historical Sales</h3>
                 <ForecastChart forecast={forecastResponse.forecast} historicalSales={historicalSales} />
               </div>
+
               
               <div className="card" style={{ padding: 'var(--space-5)', width: '100%', overflowX: 'auto' }}>
                 <h3 className="text-primary" style={{ margin: '0 0 var(--space-4) 0', fontSize: '1.25rem' }}>Forecast Details</h3>
                 <ForecastTable forecast={forecastResponse.forecast} />
               </div>
+
               
               <ModelMetrics metrics={forecastResponse.metrics} />
+              
+              {qualityReport && (
+                <QualityReportCard report={qualityReport} />
+              )}
+
               <ExplanationPanel explanation={forecastResponse.explanation} />
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 'var(--space-6)', marginTop: 'var(--space-6)' }}>

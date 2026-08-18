@@ -26,10 +26,9 @@ public class RestClientConfig {
         factory.setConnectTimeout(timeoutMs);
         factory.setReadTimeout(timeoutMs);
 
-        // Dedicated JsonMapper for FastAPI communication (snake_case).
+        // Dedicated JsonMapper for FastAPI communication.
         // Java time support is built into Jackson 3.x — no module registration needed.
         JsonMapper snakeCaseMapper = JsonMapper.builder()
-                .propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
                 .build();
 

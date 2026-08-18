@@ -31,4 +31,12 @@ public class ForecastController {
 
         return ResponseEntity.ok(ApiResponse.success(response, "Forecast generated successfully"));
     }
+
+    @org.springframework.web.bind.annotation.GetMapping("/{category}/quality-report")
+    public ResponseEntity<ApiResponse<com.team24.pharma.dto.QualityReportResponse>> getQualityReport(
+            @org.springframework.web.bind.annotation.PathVariable String category) {
+        
+        com.team24.pharma.dto.QualityReportResponse response = forecastService.getQualityReport(category);
+        return ResponseEntity.ok(ApiResponse.success(response, "Quality report fetched successfully"));
+    }
 }

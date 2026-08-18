@@ -24,6 +24,15 @@ public class FastApiConfidence {
 
     private String method;
 
+    @JsonProperty("reliabilityScore")
+    private BigDecimal reliabilityScore;
+
+    @JsonProperty("reliabilityCategory")
+    private String reliabilityCategory;
+
+    @JsonProperty("reliabilityReason")
+    private String reliabilityReason;
+
     @JsonProperty("meanMae")
     private BigDecimal meanMae;
 
@@ -32,6 +41,30 @@ public class FastApiConfidence {
 
     @JsonProperty("meanSmapePct")
     private BigDecimal meanSmapePct;
+
+    @JsonProperty("meanRmse")
+    private BigDecimal meanRmse;
+
+    @JsonProperty("meanMase")
+    private BigDecimal meanMase;
+
+    @JsonProperty("meanBias")
+    private BigDecimal meanBias;
+
+    @JsonProperty("meanTrendAcc")
+    private BigDecimal meanTrendAcc;
+
+    @JsonProperty("meanPicp")
+    private BigDecimal meanPicp;
+
+    @JsonProperty("picpAvailable")
+    private Boolean picpAvailable;
+
+    @JsonProperty("picpTarget")
+    private BigDecimal picpTarget;
+
+    @JsonProperty("picpSampleCount")
+    private Integer picpSampleCount;
 
     private String note;
 }

@@ -11,6 +11,13 @@ from typing import Optional
 from pydantic import BaseModel, Field, field_validator
 
 
+class SeasonalityInfo(BaseModel):
+    type: str
+    period: Optional[int] = None
+    strength: Optional[float] = None
+    detected: bool
+
+
 class ForecastRequest(BaseModel):
     category: str = Field(..., min_length=1, description="Drug category code, e.g. 'R03'")
     horizon: int = Field(..., ge=1, le=365, description="Days to forecast, 1-365")
@@ -34,9 +41,20 @@ class ForecastPoint(BaseModel):
 
 class ConfidenceInfo(BaseModel):
     method: str
-    meanMae: float
-    meanWapePct: float
-    meanSmapePct: float
+    reliabilityScore: Optional[float] = None
+    reliabilityCategory: Optional[str] = None
+    reliabilityReason: Optional[str] = None
+    meanMae: Optional[float] = None
+    meanWapePct: Optional[float] = None
+    meanSmapePct: Optional[float] = None
+    meanRmse: Optional[float] = None
+    meanMase: Optional[float] = None
+    meanBias: Optional[float] = None
+    meanTrendAcc: Optional[float] = None
+    meanPicp: Optional[float] = None
+    picpAvailable: Optional[bool] = None
+    picpTarget: Optional[float] = None
+    picpSampleCount: Optional[int] = None
     note: str
 
 
@@ -59,9 +77,20 @@ class ForecastResponse(BaseModel):
     modelVersion: str
     forecast: list[ForecastPoint]
     trend: str
-    seasonalityDetected: bool
+    seasonality: SeasonalityInfo
     confidence: ConfidenceInfo
     explanation: Explanation
+
+
+class QualityReportResponse(BaseModel):
+    category: str
+    modelType: str
+    modelVersion: str
+    trainedAt: str
+    nTrainingRows: int
+    demandClassification: str
+    classificationConfidence: float
+    confidence: ConfidenceInfo
 
 
 class HealthResponse(BaseModel):

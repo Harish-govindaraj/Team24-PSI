@@ -56,7 +56,7 @@ def get_decision_intelligence(category: str, horizon: int) -> dict:
     avg_daily_demand = sum(p["predictedSales"] for p in forecast_result["forecast"]) / len(forecast_result["forecast"])
     risk = assess_risk(category, avg_daily_demand, operational_record)
     recommendations = build_recommendations(
-        category, forecast_result["trend"], forecast_result["seasonalityDetected"], risk, operational_record
+        category, forecast_result["trend"], forecast_result["seasonality"]["detected"], risk, operational_record
     )
 
     return {
@@ -65,7 +65,7 @@ def get_decision_intelligence(category: str, horizon: int) -> dict:
         "forecastSummary": {
             "modelType": forecast_result["modelType"],
             "trend": forecast_result["trend"],
-            "seasonalityDetected": forecast_result["seasonalityDetected"],
+            "seasonalityDetected": forecast_result["seasonality"]["detected"],
             "avgDailyDemand": round(avg_daily_demand, 4),
             "confidence": forecast_result["confidence"],
         },

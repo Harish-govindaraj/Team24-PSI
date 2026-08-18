@@ -36,8 +36,7 @@ public class FastApiForecastResponse {
     private List<ForecastPoint> forecast;
     private String trend;
 
-    @JsonProperty("seasonalityDetected")
-    private Boolean seasonalityDetected;
+    private SeasonalityInfo seasonality;
 
     private FastApiConfidence confidence;
     private FastApiExplanation explanation;

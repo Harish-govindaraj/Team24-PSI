@@ -63,11 +63,11 @@ function ForecastChart({ forecast, historicalSales = [] }) {
             <YAxis tickFormatter={formatValue} tick={{ fill: '#64748b', fontSize: 12 }} />
             <Tooltip
               formatter={(value, name) => {
-                if (name === 'interval' || name === 'Confidence Interval') {
+                if (name === 'interval' || name === 'Prediction Interval') {
                   if (Array.isArray(value) && value.length === 2) {
-                    return [`${formatValue(value[0])} - ${formatValue(value[1])}`, '95% Confidence Interval'];
+                    return [`${formatValue(value[0])} - ${formatValue(value[1])}`, 'Prediction Interval'];
                   }
-                  return ['N/A', '95% Confidence Interval'];
+                  return ['N/A', 'Prediction Interval'];
                 }
                 return [formatValue(value), name];
               }}
@@ -81,7 +81,7 @@ function ForecastChart({ forecast, historicalSales = [] }) {
                 dataKey="interval"
                 fill="#bfdbfe"
                 stroke="none"
-                name="Confidence Interval"
+                name="Prediction Interval"
                 connectNulls={false}
               />
             )}

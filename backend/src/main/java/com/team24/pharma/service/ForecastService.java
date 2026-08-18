@@ -52,8 +52,8 @@ public class ForecastService {
                         .upperBound(point.getUpperBound())
                         .modelName(response.getModel() != null ? response.getModel() : "unknown")
                         .trend(response.getTrend())
-                        .seasonality(response.getSeasonality())
-                        .confidenceScore(response.getConfidenceScore())
+                        .seasonality(response.getSeasonality() != null ? response.getSeasonality().getType() : "none")
+                        .confidenceScore(response.getConfidenceInfo() != null ? response.getConfidenceInfo().getScore() : null)
                         .createdAt(now)
                         .build())
                 .toList();
@@ -61,5 +61,10 @@ public class ForecastService {
         forecastResultRepository.saveAll(results);
         log.info("Persisted {} forecast results for category: {}",
                 results.size(), response.getCategory());
+    }
+
+    public com.team24.pharma.dto.QualityReportResponse getQualityReport(String category) {
+        log.info("Fetching ML quality report for category: {}", category);
+        return forecastAIClient.getQualityReport(category);
     }
 }

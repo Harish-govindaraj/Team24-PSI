@@ -60,7 +60,10 @@ class SnakeCaseContractTest {
                         }
                     ],
                     "trend": "stable",
-                    "seasonalityDetected": false,
+                    "seasonality": {
+                        "type": "none",
+                        "detected": false
+                    },
                     "confidence": {
                         "method": "walk_forward_wape",
                         "meanWapePct": 41.3178,
@@ -90,7 +93,8 @@ class SnakeCaseContractTest {
         assertThat(response.getModelType()).isEqualTo("sarima");
         assertThat(response.getModelVersion()).isEqualTo("20260816T085847Z");
         assertThat(response.getTrend()).isEqualTo("stable");
-        assertThat(response.getSeasonalityDetected()).isFalse();
+        assertThat(response.getSeasonality().getDetected()).isFalse();
+        assertThat(response.getSeasonality().getType()).isEqualTo("none");
 
         // Assert â€” forecast points (snake_case â†’ camelCase)
         assertThat(response.getForecast()).hasSize(2);
@@ -142,7 +146,12 @@ class SnakeCaseContractTest {
                     "modelVersion": "20260816T085847Z",
                     "forecast": [],
                     "trend": "increasing",
-                    "seasonalityDetected": true,
+                    "seasonality": {
+                        "type": "weekly",
+                        "period": 7,
+                        "strength": 0.45,
+                        "detected": true
+                    },
                     "confidence": {
                         "method": "walk_forward_wape",
                         "meanWapePct": 20.0,
@@ -204,7 +213,7 @@ class SnakeCaseContractTest {
         assertThat(response.getCategory()).isEqualTo("A02");
         assertThat(response.getModel()).isEqualTo("ARIMA");
         assertThat(response.getTrend()).isNull();
-        assertThat(response.getConfidenceScore()).isNull();
+        assertThat(response.getConfidenceInfo()).isNull();
         assertThat(response.getMetrics()).isNull();
         assertThat(response.getExplanation()).isNull();
         assertThat(response.getRisk()).isNull();
@@ -227,7 +236,10 @@ class SnakeCaseContractTest {
                     "horizon": 7,
                     "forecast": [],
                     "trend": "stable",
-                    "seasonalityDetected": false,
+                    "seasonality": {
+                        "type": "none",
+                        "detected": false
+                    },
                     "extra_nested": {"foo": "bar"}
                 }
                 """;
