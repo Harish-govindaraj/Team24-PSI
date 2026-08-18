@@ -37,7 +37,8 @@ def test_forecast_valid_request_returns_full_contract():
         if point["lowerBound"] is not None:
             assert point["lowerBound"] <= point["predictedSales"] <= point["upperBound"]
     assert body["trend"] in {"increasing", "decreasing", "stable"}
-    assert isinstance(body["seasonalityDetected"], bool)
+    assert "type" in body["seasonality"]
+    assert isinstance(body["seasonality"]["detected"], bool)
     assert "meanWapePct" in body["confidence"]
     assert "available" in body["explanation"]
 
@@ -77,4 +78,14 @@ def test_forecast_explanation_matches_model_type():
         assert len(explanation["topFeatures"]) > 0
     else:
         assert explanation["method"] == "heuristic"
-        assert explanation["reason"]
+
+def test_picp_contract_sample_count():
+    category = _first_registered_category()
+    resp = client.post("/forecast", json={"category": category, "horizon": 7})
+    conf = resp.json()["confidence"]
+    if conf["picpAvailable"]:
+        assert conf["meanPicp"] is not None
+        assert conf["picpSampleCount"] > 0
+    else:
+        assert conf["meanPicp"] is None
+        assert conf["picpSampleCount"] == 0

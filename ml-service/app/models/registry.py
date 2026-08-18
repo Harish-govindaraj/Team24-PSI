@@ -37,6 +37,7 @@ class ModelEntry:
     mean_bias: float
     mean_trend_acc: float
     mean_picp: float
+    total_interval_evaluations: int
     n_training_rows: int
     step_lower_residuals: list[float] | None = None
     step_upper_residuals: list[float] | None = None
@@ -80,6 +81,7 @@ def register_model(category: str, model_type: str, model_object, metrics, n_trai
         mean_bias=round(metrics.mean_bias, 4) if not math.isnan(metrics.mean_bias) else float('nan'),
         mean_trend_acc=round(metrics.mean_trend_acc, 4) if not math.isnan(metrics.mean_trend_acc) else float('nan'),
         mean_picp=round(metrics.mean_picp, 4) if not math.isnan(metrics.mean_picp) else float('nan'),
+        total_interval_evaluations=getattr(metrics, 'total_interval_evaluations', 0),
         n_training_rows=n_training_rows,
         step_lower_residuals=metrics.step_lower_residuals,
         step_upper_residuals=metrics.step_upper_residuals,

@@ -25,7 +25,7 @@ class SeriesStats:
     std_dev: float
     zero_demand_pct: float
     trend_slope: float
-    seasonal_strength: float | None
+    seasonality: dict
     volatility_cv: float
     adi: float
     cv2: float
@@ -47,28 +47,41 @@ def _trend_slope(series: pd.Series) -> float:
     return float(slope)
 
 
-def _seasonal_strength(series: pd.Series, period: int = 7) -> float | None:
+def _detect_seasonality(series: pd.Series) -> dict:
     """
-    Uses statsmodels' classical seasonal_decompose (additive) over a
-    weekly period (pharmacy sales are strongly day-of-week driven).
-    Returns a 0-1 strength score: variance of the seasonal component
-    relative to variance of (seasonal + residual). Returns None if
-    there isn't enough data to decompose (needs at least 2 full
-    periods).
+    Statistically robust seasonality detection using autocorrelation (ACF).
+    Checks lag 7 (weekly) and lag 30 (monthly) against the 95% confidence 
+    interval threshold (1.96 / sqrt(N)).
     """
-    if len(series) < period * 2:
-        return None
-    try:
-        result = seasonal_decompose(series, model="additive", period=period, extrapolate_trend="freq")
-    except Exception:
-        return None
-
-    seasonal_var = np.nanvar(result.seasonal)
-    resid_var = np.nanvar(result.resid)
-    denom = seasonal_var + resid_var
-    if denom == 0:
-        return 0.0
-    return float(round(seasonal_var / denom, 4))
+    n = len(series)
+    if n < 60:
+        return {"type": "insufficient_data", "period": None, "strength": None, "detected": False}
+        
+    threshold = 1.96 / np.sqrt(n)
+    
+    # Calculate autocorrelations
+    acf_7 = series.autocorr(lag=7)
+    acf_30 = series.autocorr(lag=30)
+    
+    acf_7 = float(acf_7) if not pd.isna(acf_7) else 0.0
+    acf_30 = float(acf_30) if not pd.isna(acf_30) else 0.0
+    
+    # We only care about positive correlation for seasonality
+    sig_7 = (acf_7 > threshold)
+    sig_30 = (acf_30 > threshold)
+    
+    if sig_7 and sig_30:
+        if acf_7 >= acf_30:
+            return {"type": "weekly", "period": 7, "strength": round(acf_7, 4), "detected": True}
+        else:
+            return {"type": "monthly", "period": 30, "strength": round(acf_30, 4), "detected": True}
+    elif sig_7:
+        return {"type": "weekly", "period": 7, "strength": round(acf_7, 4), "detected": True}
+    elif sig_30:
+        return {"type": "monthly", "period": 30, "strength": round(acf_30, 4), "detected": True}
+    else:
+        max_strength = max(acf_7, acf_30)
+        return {"type": "none", "period": None, "strength": round(max_strength, 4) if max_strength > 0 else 0.0, "detected": False}
 
 
 def compute_series_stats(series: pd.Series, category: str) -> SeriesStats:
@@ -115,7 +128,7 @@ def compute_series_stats(series: pd.Series, category: str) -> SeriesStats:
         std_dev=round(std, 4),
         zero_demand_pct=round(100 * float((series == 0).mean()), 2),
         trend_slope=round(_trend_slope(series), 6),
-        seasonal_strength=_seasonal_strength(series),
+        seasonality=_detect_seasonality(series),
         volatility_cv=round(volatility_cv, 4),
         adi=round(adi, 4),
         cv2=round(cv2, 4),

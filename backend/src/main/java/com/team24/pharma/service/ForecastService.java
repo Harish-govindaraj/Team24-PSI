@@ -52,7 +52,7 @@ public class ForecastService {
                         .upperBound(point.getUpperBound())
                         .modelName(response.getModel() != null ? response.getModel() : "unknown")
                         .trend(response.getTrend())
-                        .seasonality(response.getSeasonality())
+                        .seasonality(response.getSeasonality() != null ? response.getSeasonality().getType() : "none")
                         .confidenceScore(response.getConfidenceInfo() != null ? response.getConfidenceInfo().getScore() : null)
                         .createdAt(now)
                         .build())

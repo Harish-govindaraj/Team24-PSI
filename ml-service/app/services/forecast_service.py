@@ -129,7 +129,6 @@ def generate_forecast(category: str, horizon: int) -> dict:
         })
 
     trend = "increasing" if stats.trend_slope > 0.01 else "decreasing" if stats.trend_slope < -0.01 else "stable"
-    seasonality_detected = bool(stats.seasonal_strength is not None and stats.seasonal_strength > 0.1)
 
     explanation = explain_forecast(model, entry["model_type"])
 
@@ -153,7 +152,7 @@ def generate_forecast(category: str, horizon: int) -> dict:
         "modelVersion": entry["version"],
         "forecast": forecast_points,
         "trend": trend,
-        "seasonalityDetected": seasonality_detected,
+        "seasonality": stats.seasonality,
         "confidence": {
             "method": "multi_factor",
             "reliabilityScore": round(score, 2),

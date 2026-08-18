@@ -20,6 +20,7 @@ import com.team24.pharma.dto.FastApiForecastResponse;
 import com.team24.pharma.dto.ForecastPoint;
 import com.team24.pharma.dto.ForecastRequest;
 import com.team24.pharma.dto.ForecastResponse;
+import com.team24.pharma.dto.SeasonalityInfo;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -69,7 +70,7 @@ class FastApiForecastAIClientTest {
                 .modelType("Prophet")
                 .modelVersion("v1.2.3")
                 .trend("increasing")
-                .seasonalityDetected(true)
+                .seasonality(SeasonalityInfo.builder().detected(true).type("weekly").period(7).strength(0.45).build())
                 .confidence(FastApiConfidence.builder()
                         .meanMae(new BigDecimal("12.34"))
                         .meanWapePct(new BigDecimal("5.00"))
@@ -151,7 +152,8 @@ class FastApiForecastAIClientTest {
         assertThat(result.getModel()).isEqualTo("Prophet");
         assertThat(result.getModelVersion()).isEqualTo("v1.2.3");
         assertThat(result.getTrend()).isEqualTo("increasing");
-        assertThat(result.getSeasonality()).isEqualTo("detected");
+        assertThat(result.getSeasonality().getDetected()).isTrue();
+        assertThat(result.getSeasonality().getType()).isEqualTo("weekly");
         assertThat(result.getConfidenceInfo().getScore()).isEqualByComparingTo(new BigDecimal("95.00"));
         assertThat(result.getForecast()).hasSize(1);
 

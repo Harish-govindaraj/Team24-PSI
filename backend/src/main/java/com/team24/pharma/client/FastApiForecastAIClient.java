@@ -115,9 +115,7 @@ public class FastApiForecastAIClient implements ForecastAIClient {
                 .model(src.getModelType())
                 .modelVersion(src.getModelVersion())
                 .trend(src.getTrend())
-                .seasonality(src.getSeasonalityDetected() != null && src.getSeasonalityDetected()
-                        ? "detected"
-                        : null)
+                .seasonality(src.getSeasonality())
                 .confidenceInfo(mapConfidenceScore(src.getConfidence()))
                 .forecast(src.getForecast())
                 .metrics(mapMetrics(src.getConfidence()))

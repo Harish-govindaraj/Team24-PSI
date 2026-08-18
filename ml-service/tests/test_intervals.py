@@ -29,7 +29,7 @@ def test_forecast_service_empirical_intervals(monkeypatch):
     # Mock data loader and stats to avoid disk I/O during test
     monkeypatch.setattr("app.services.forecast_service.load_raw_sales_data", lambda: None)
     monkeypatch.setattr("app.services.forecast_service.get_category_series", lambda *a: type('obj', (object,), {'index': type('idx', (object,), {'__getitem__': lambda s, i: __import__('pandas').Timestamp('2023-01-01')})()})())
-    monkeypatch.setattr("app.services.forecast_service.compute_series_stats", lambda *a: type('stats', (object,), {'trend_slope': 0, 'seasonal_strength': 0, 'cv2': 0.1, 'classification_confidence': 100.0, 'demand_classification': 'Stable'})())
+    monkeypatch.setattr("app.services.forecast_service.compute_series_stats", lambda *a: type('stats', (object,), {'trend_slope': 0, 'seasonality': {'type': 'none', 'detected': False}, 'cv2': 0.1, 'classification_confidence': 100.0, 'demand_classification': 'Stable'})())
     
     res = generate_forecast(category, horizon)
     
@@ -64,7 +64,7 @@ def test_forecast_service_interval_missing(monkeypatch):
     monkeypatch.setattr("app.services.forecast_service.load_model", mock_load_model)
     monkeypatch.setattr("app.services.forecast_service.load_raw_sales_data", lambda: None)
     monkeypatch.setattr("app.services.forecast_service.get_category_series", lambda *a: type('obj', (object,), {'index': type('idx', (object,), {'__getitem__': lambda s, i: __import__('pandas').Timestamp('2023-01-01')})()})())
-    monkeypatch.setattr("app.services.forecast_service.compute_series_stats", lambda *a: type('stats', (object,), {'trend_slope': 0, 'seasonal_strength': 0, 'cv2': 0.1, 'classification_confidence': 100.0, 'demand_classification': 'Stable'})())
+    monkeypatch.setattr("app.services.forecast_service.compute_series_stats", lambda *a: type('stats', (object,), {'trend_slope': 0, 'seasonality': {'type': 'none', 'detected': False}, 'cv2': 0.1, 'classification_confidence': 100.0, 'demand_classification': 'Stable'})())
     
     res = generate_forecast(category, horizon)
     

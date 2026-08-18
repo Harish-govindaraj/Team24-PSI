@@ -11,6 +11,13 @@ from typing import Optional
 from pydantic import BaseModel, Field, field_validator
 
 
+class SeasonalityInfo(BaseModel):
+    type: str
+    period: Optional[int] = None
+    strength: Optional[float] = None
+    detected: bool
+
+
 class ForecastRequest(BaseModel):
     category: str = Field(..., min_length=1, description="Drug category code, e.g. 'R03'")
     horizon: int = Field(..., ge=1, le=365, description="Days to forecast, 1-365")
@@ -70,7 +77,7 @@ class ForecastResponse(BaseModel):
     modelVersion: str
     forecast: list[ForecastPoint]
     trend: str
-    seasonalityDetected: bool
+    seasonality: SeasonalityInfo
     confidence: ConfidenceInfo
     explanation: Explanation
 

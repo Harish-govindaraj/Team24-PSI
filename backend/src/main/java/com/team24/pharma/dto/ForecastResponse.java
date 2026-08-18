@@ -22,7 +22,7 @@ public class ForecastResponse {
     private String model;
     private String modelVersion;
     private String trend;
-    private String seasonality;
+    private SeasonalityInfo seasonality;
     private ConfidenceInfo confidenceInfo;
     private List<ForecastPoint> forecast;
     private ModelMetrics metrics;
