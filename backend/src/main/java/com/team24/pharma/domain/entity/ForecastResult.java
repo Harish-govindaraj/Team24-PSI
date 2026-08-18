@@ -52,7 +52,7 @@ public class ForecastResult implements Serializable {
     @Column(name = "seasonality", length = 30)
     private String seasonality;
 
-    @Column(name = "confidence_score", precision = 5, scale = 4)
+    @Column(name = "confidence_score", precision = 6, scale = 2)
     private BigDecimal confidenceScore;
 
     @Column(name = "created_at", nullable = false)
