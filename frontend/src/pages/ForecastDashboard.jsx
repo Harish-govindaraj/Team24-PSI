@@ -101,16 +101,19 @@ function ForecastDashboard() {
             <>
               <ForecastSummary data={forecastResponse} />
 
+              
               <div className="card" style={{ padding: 'var(--space-5)', width: '100%', overflowX: 'auto' }}>
                 <h3 className="text-primary" style={{ margin: '0 0 var(--space-4) 0', fontSize: '1.25rem' }}>Forecast vs Historical Sales</h3>
                 <ForecastChart forecast={forecastResponse.forecast} historicalSales={historicalSales} />
               </div>
 
+              
               <div className="card" style={{ padding: 'var(--space-5)', width: '100%', overflowX: 'auto' }}>
                 <h3 className="text-primary" style={{ margin: '0 0 var(--space-4) 0', fontSize: '1.25rem' }}>Forecast Details</h3>
                 <ForecastTable forecast={forecastResponse.forecast} />
               </div>
 
+              
               <ModelMetrics metrics={forecastResponse.metrics} />
               
               {qualityReport && (
