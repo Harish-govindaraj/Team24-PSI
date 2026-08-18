@@ -23,6 +23,22 @@ function ModelMetrics({ metrics }) {
       <h3>Model Metrics</h3>
       <div className="summary-grid">
         <div className="summary-item">
+          <span className="summary-label">WAPE</span>
+          <span className="summary-value">{formatValue(metrics.wape)}%</span>
+        </div>
+        <div className="summary-item">
+          <span className="summary-label">MASE</span>
+          <span className="summary-value">{formatValue(metrics.mase)}</span>
+        </div>
+        <div className="summary-item">
+          <span className="summary-label">PICP</span>
+          <span className="summary-value">{formatValue(metrics.picp)}%</span>
+        </div>
+        <div className="summary-item">
+          <span className="summary-label">RMSE</span>
+          <span className="summary-value">{formatValue(metrics.rmse)}</span>
+        </div>
+        <div className="summary-item">
           <span className="summary-label">MAE</span>
           <span className="summary-value">{formatValue(metrics.mae)}</span>
         </div>
@@ -31,8 +47,12 @@ function ModelMetrics({ metrics }) {
           <span className="summary-value">{formatValue(metrics.smape)}%</span>
         </div>
         <div className="summary-item">
-          <span className="summary-label">WAPE</span>
-          <span className="summary-value">{formatValue(metrics.wape)}%</span>
+          <span className="summary-label">Bias</span>
+          <span className="summary-value">{formatValue(metrics.bias)}%</span>
+        </div>
+        <div className="summary-item">
+          <span className="summary-label">Trend Accuracy</span>
+          <span className="summary-value">{formatValue(metrics.trendAccuracy)}%</span>
         </div>
       </div>
     </div>

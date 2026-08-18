@@ -31,8 +31,15 @@ class ModelEntry:
     trained_at: str
     mean_mae: float
     mean_smape: float
-    mean_wape: float
+    global_wape: float
+    mean_rmse: float
+    mean_mase: float
+    mean_bias: float
+    mean_trend_acc: float
+    mean_picp: float
     n_training_rows: int
+    step_lower_residuals: list[float] | None = None
+    step_upper_residuals: list[float] | None = None
 
 
 def _load_manifest() -> dict:
@@ -60,21 +67,29 @@ def register_model(category: str, model_type: str, model_object, metrics, n_trai
 
     joblib.dump(model_object, ARTIFACTS_DIR / artifact_filename)
 
+    import math
     entry = ModelEntry(
         category=category, model_type=model_type, version=version,
         artifact_filename=artifact_filename,
         trained_at=datetime.now(timezone.utc).isoformat(),
-        mean_mae=round(metrics.mean_mae, 4),
-        mean_smape=round(metrics.mean_smape, 4),
-        mean_wape=round(metrics.mean_wape, 4),
+        mean_mae=round(metrics.mean_mae, 4) if not math.isnan(metrics.mean_mae) else float('nan'),
+        mean_smape=round(metrics.mean_smape, 4) if not math.isnan(metrics.mean_smape) else float('nan'),
+        global_wape=round(metrics.global_wape, 4) if not math.isnan(metrics.global_wape) else float('nan'),
+        mean_rmse=round(metrics.mean_rmse, 4) if not math.isnan(metrics.mean_rmse) else float('nan'),
+        mean_mase=round(metrics.mean_mase, 4) if not math.isnan(metrics.mean_mase) else float('nan'),
+        mean_bias=round(metrics.mean_bias, 4) if not math.isnan(metrics.mean_bias) else float('nan'),
+        mean_trend_acc=round(metrics.mean_trend_acc, 4) if not math.isnan(metrics.mean_trend_acc) else float('nan'),
+        mean_picp=round(metrics.mean_picp, 4) if not math.isnan(metrics.mean_picp) else float('nan'),
         n_training_rows=n_training_rows,
+        step_lower_residuals=metrics.step_lower_residuals,
+        step_upper_residuals=metrics.step_upper_residuals,
     )
 
     manifest = _load_manifest()
     manifest[category] = asdict(entry)
     _save_manifest(manifest)
 
-    logger.info("Registered %s for %s (WAPE=%.2f%%) -> %s", model_type, category, entry.mean_wape, artifact_filename)
+    logger.info("Registered %s for %s (WAPE=%.2f%%) -> %s", model_type, category, entry.global_wape, artifact_filename)
     return entry
 
 

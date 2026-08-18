@@ -28,11 +28,33 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AiServiceException.class)
-    public ResponseEntity<ApiResponse<Void>> handleAiServiceException(AiServiceException ex) {
+    public ResponseEntity<Object> handleAiServiceException(AiServiceException ex) {
         log.error("AI service error: {}", ex.getMessage(), ex);
-        return ResponseEntity
-                .status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body(ApiResponse.error("AI service is currently unavailable: " + ex.getMessage()));
+        HttpStatus status = ex.getStatus() != null ? ex.getStatus() : HttpStatus.SERVICE_UNAVAILABLE;
+        
+        Map<String, Object> body = new HashMap<>();
+        if (status == HttpStatus.SERVICE_UNAVAILABLE) {
+            body.put("error", "AI forecasting service unavailable");
+            body.put("service", "ml-service");
+            body.put("timestamp", LocalDateTime.now().toString());
+            body.put("details", ex.getMessage());
+        } else if (status == HttpStatus.NOT_FOUND || status == HttpStatus.BAD_REQUEST) {
+            body.put("error", "Forecast unavailable");
+            if (ex.getCategory() != null) {
+                body.put("category", ex.getCategory());
+            }
+            // Assuming message contains the reason
+            body.put("reason", ex.getMessage());
+        } else if (status == HttpStatus.BAD_GATEWAY || status == HttpStatus.INTERNAL_SERVER_ERROR) {
+            status = HttpStatus.BAD_GATEWAY;
+            body.put("error", "AI prediction failed");
+            body.put("reason", ex.getMessage());
+        } else {
+            body.put("error", "AI service error");
+            body.put("reason", ex.getMessage());
+        }
+        
+        return ResponseEntity.status(status).body(body);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

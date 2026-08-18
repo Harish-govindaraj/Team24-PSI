@@ -72,6 +72,19 @@ class ExponentialSmoothingForecaster:
         preds = self._fitted.forecast(horizon).values
         return np.clip(preds, a_min=0, a_max=None)
 
+    def predict_with_interval(self, horizon: int, alpha: float = 0.05):
+        mean = self.predict(horizon)
+        if hasattr(self._fitted, "resid") and self._fitted.resid is not None:
+            resid_std = np.nanstd(self._fitted.resid)
+            # 1.96 for 95% interval
+            z = 1.96
+            # Increase uncertainty over time (sqrt(h) scaling)
+            margin = z * resid_std * np.sqrt(np.arange(1, horizon + 1))
+            lower = np.clip(mean - margin, 0, None)
+            upper = np.clip(mean + margin, 0, None)
+            return mean, lower, upper
+        return mean, [None]*horizon, [None]*horizon
+
 
 class SARIMAForecaster:
     """SARIMA(1,1,1)(1,1,1,7) - a fixed weekly-seasonal order, chosen
@@ -107,4 +120,102 @@ class SARIMAForecaster:
         conf_int = forecast_obj.conf_int(alpha=alpha)
         lower = np.clip(conf_int.iloc[:, 0].values, a_min=0, a_max=None)
         upper = np.clip(conf_int.iloc[:, 1].values, a_min=0, a_max=None)
+        return mean, lower, upper
+
+
+class CrostonForecaster:
+    """Croston's method for intermittent demand.
+    Separates non-zero demand size and intervals between demands,
+    smoothing both independently to predict the average rate.
+    """
+    name = "croston"
+
+    def __init__(self, alpha: float = 0.1):
+        self.alpha = alpha
+
+    def fit(self, series: pd.Series) -> "CrostonForecaster":
+        a = series.values
+        demand_idx = np.where(a > 0)[0]
+        if len(demand_idx) == 0:
+            self._rate = 0.0
+            self._resid_std = 0.0
+            return self
+
+        sizes = a[demand_idx]
+        intervals = np.diff(np.insert(demand_idx, 0, -1))
+
+        z = sizes[0]
+        p = intervals[0]
+        for i in range(1, len(demand_idx)):
+            z = self.alpha * sizes[i] + (1 - self.alpha) * z
+            p = self.alpha * intervals[i] + (1 - self.alpha) * p
+
+        self._rate = z / p if p > 0 else 0.0
+        
+        # Calculate naive residuals for intervals
+        preds = np.full(len(a), self._rate)
+        self._resid_std = np.std(a - preds)
+        
+        return self
+
+    def predict(self, horizon: int) -> np.ndarray:
+        return np.full(horizon, self._rate)
+
+    def predict_with_interval(self, horizon: int, alpha: float = 0.05):
+        mean = self.predict(horizon)
+        z_val = 1.96
+        margin = z_val * getattr(self, "_resid_std", 0.0) * np.sqrt(np.arange(1, horizon + 1))
+        lower = np.clip(mean - margin, 0, None)
+        upper = mean + margin
+        return mean, lower, upper
+
+
+class CrostonTSBForecaster:
+    """Croston TSB method for intermittent demand.
+    Updates probability of demand (p) and demand size (z) separately
+    at every time step.
+    """
+    name = "croston_tsb"
+
+    def __init__(self, alpha_p: float = 0.1, alpha_z: float = 0.1):
+        self.alpha_p = alpha_p
+        self.alpha_z = alpha_z
+
+    def fit(self, series: pd.Series) -> "CrostonTSBForecaster":
+        a = series.values
+        demand_idx = np.where(a > 0)[0]
+        if len(demand_idx) == 0:
+            self._rate = 0.0
+            self._resid_std = 0.0
+            return self
+
+        # Initialize p and z based on the first demand
+        z = a[demand_idx[0]]
+        p = 1.0 / (demand_idx[0] + 1) if demand_idx[0] >= 0 else 1.0
+
+        for i in range(1, len(a)):
+            if a[i] > 0:
+                z = self.alpha_z * a[i] + (1 - self.alpha_z) * z
+                p = self.alpha_p * 1.0 + (1 - self.alpha_p) * p
+            else:
+                p = (1 - self.alpha_p) * p
+                # z is not updated when there is no demand
+
+        self._rate = p * z
+        
+        # Calculate naive residuals
+        preds = np.full(len(a), self._rate)
+        self._resid_std = np.std(a - preds)
+        
+        return self
+
+    def predict(self, horizon: int) -> np.ndarray:
+        return np.full(horizon, self._rate)
+
+    def predict_with_interval(self, horizon: int, alpha: float = 0.05):
+        mean = self.predict(horizon)
+        z_val = 1.96
+        margin = z_val * getattr(self, "_resid_std", 0.0) * np.sqrt(np.arange(1, horizon + 1))
+        lower = np.clip(mean - margin, 0, None)
+        upper = mean + margin
         return mean, lower, upper

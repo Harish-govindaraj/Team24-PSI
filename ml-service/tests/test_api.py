@@ -71,9 +71,10 @@ def test_forecast_explanation_matches_model_type():
     resp = client.post("/forecast", json={"category": category, "horizon": 5})
     body = resp.json()
     explanation = body["explanation"]
+    assert explanation["available"] is True
     if body["modelType"] in {"xgboost", "lightgbm"}:
-        assert explanation["available"] is True
+        assert explanation["method"] == "shap_tree_explainer"
         assert len(explanation["topFeatures"]) > 0
     else:
-        assert explanation["available"] is False
+        assert explanation["method"] == "heuristic"
         assert explanation["reason"]

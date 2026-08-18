@@ -18,6 +18,8 @@ function ForecastTable({ forecast }) {
     }).format(num);
   };
 
+  const hasBounds = forecast.some(p => p.lowerBound != null || p.upperBound != null);
+
   return (
     <div className="table-card">
       <h3>Forecast Details</h3>
@@ -27,8 +29,7 @@ function ForecastTable({ forecast }) {
             <tr>
               <th>Date</th>
               <th>Predicted Sales</th>
-              <th>Lower Bound</th>
-              <th>Upper Bound</th>
+              <th>Prediction Interval</th>
             </tr>
           </thead>
           <tbody>
@@ -36,8 +37,12 @@ function ForecastTable({ forecast }) {
               <tr key={index}>
                 <td>{point.date || 'N/A'}</td>
                 <td>{formatNumber(point.predictedSales)}</td>
-                <td>{formatNumber(point.lowerBound)}</td>
-                <td>{formatNumber(point.upperBound)}</td>
+                <td>
+                  {point.lowerBound != null && point.upperBound != null
+                    ? `${formatNumber(point.lowerBound)} - ${formatNumber(point.upperBound)}`
+                    : <span style={{ color: 'var(--psi-text-muted)', fontStyle: 'italic' }}>Prediction interval unavailable for this model</span>
+                  }
+                </td>
               </tr>
             ))}
           </tbody>

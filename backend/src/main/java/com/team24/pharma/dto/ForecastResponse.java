@@ -23,10 +23,10 @@ public class ForecastResponse {
     private String modelVersion;
     private String trend;
     private String seasonality;
-    private BigDecimal confidenceScore;
+    private ConfidenceInfo confidenceInfo;
     private List<ForecastPoint> forecast;
     private ModelMetrics metrics;
-    private List<ExplanationItem> explanation;
+    private Explanation explanation;
     private RiskResponse risk;
     private List<RecommendationResponse> recommendations;
 }

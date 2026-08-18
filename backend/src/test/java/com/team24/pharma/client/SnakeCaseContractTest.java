@@ -204,7 +204,7 @@ class SnakeCaseContractTest {
         assertThat(response.getCategory()).isEqualTo("A02");
         assertThat(response.getModel()).isEqualTo("ARIMA");
         assertThat(response.getTrend()).isNull();
-        assertThat(response.getConfidenceScore()).isNull();
+        assertThat(response.getConfidenceInfo()).isNull();
         assertThat(response.getMetrics()).isNull();
         assertThat(response.getExplanation()).isNull();
         assertThat(response.getRisk()).isNull();

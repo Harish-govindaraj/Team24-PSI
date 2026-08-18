@@ -1,11 +1,11 @@
 import React from 'react';
 
 function ExplanationPanel({ explanation }) {
-  if (!explanation || explanation.length === 0) {
+  if (!explanation || !explanation.available) {
     return (
       <div className="explanation-card">
         <h3>AI Forecast Explanation</h3>
-        <p>No AI explanation available.</p>
+        <p>{explanation?.reason || "Feature explanation unavailable."}</p>
       </div>
     );
   }
@@ -18,13 +18,22 @@ function ExplanationPanel({ explanation }) {
     }).format(num);
   };
 
+  if (explanation.method === "heuristic") {
+    return (
+      <div className="explanation-card">
+        <h3>AI Forecast Explanation</h3>
+        <p className="heuristic-reason">{explanation.reason}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="explanation-card">
       <h3>AI Forecast Explanation</h3>
       <ul className="explanation-list">
-        {explanation.map((item, index) => (
+        {(explanation.topFeatures || []).map((item, index) => (
           <li key={index} className="explanation-item">
-            <strong>{item.feature || 'Unknown Feature'}</strong>:            Importance {formatValue(item.importance)}
+            <strong>{item.feature || 'Unknown Feature'}</strong>: Importance {formatValue(item.importance)}
           </li>
         ))}
       </ul>

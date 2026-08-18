@@ -34,9 +34,20 @@ class ForecastPoint(BaseModel):
 
 class ConfidenceInfo(BaseModel):
     method: str
-    meanMae: float
-    meanWapePct: float
-    meanSmapePct: float
+    reliabilityScore: Optional[float] = None
+    reliabilityCategory: Optional[str] = None
+    reliabilityReason: Optional[str] = None
+    meanMae: Optional[float] = None
+    meanWapePct: Optional[float] = None
+    meanSmapePct: Optional[float] = None
+    meanRmse: Optional[float] = None
+    meanMase: Optional[float] = None
+    meanBias: Optional[float] = None
+    meanTrendAcc: Optional[float] = None
+    meanPicp: Optional[float] = None
+    picpAvailable: Optional[bool] = None
+    picpTarget: Optional[float] = None
+    picpSampleCount: Optional[int] = None
     note: str
 
 
@@ -62,6 +73,17 @@ class ForecastResponse(BaseModel):
     seasonalityDetected: bool
     confidence: ConfidenceInfo
     explanation: Explanation
+
+
+class QualityReportResponse(BaseModel):
+    category: str
+    modelType: str
+    modelVersion: str
+    trainedAt: str
+    nTrainingRows: int
+    demandClassification: str
+    classificationConfidence: float
+    confidence: ConfidenceInfo
 
 
 class HealthResponse(BaseModel):

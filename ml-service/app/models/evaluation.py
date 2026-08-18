@@ -32,8 +32,57 @@ def wape(y_true, y_pred) -> float:
     y_pred = np.asarray(y_pred, dtype=float)
     total_actual = np.sum(np.abs(y_true))
     if total_actual == 0:
-        return float(np.sum(np.abs(y_pred)))  # no real volume to compare against; report raw error
+        return float('nan')  # Undefined when total actual demand is 0
     return float(100.0 * np.sum(np.abs(y_true - y_pred)) / total_actual)
+
+
+def rmse(y_true, y_pred) -> float:
+    return float(np.sqrt(np.mean(np.square(np.asarray(y_true, dtype=float) - np.asarray(y_pred, dtype=float)))))
+
+def mase(y_true, y_pred, y_train) -> float:
+    y_train = np.asarray(y_train, dtype=float)
+    if len(y_train) < 2:
+        return float('nan')
+    naive_mae = np.mean(np.abs(y_train[1:] - y_train[:-1]))
+    if naive_mae == 0:
+        return float('nan')
+    return float(mae(y_true, y_pred) / naive_mae)
+
+def bias(y_true, y_pred) -> float:
+    y_true = np.asarray(y_true, dtype=float)
+    y_pred = np.asarray(y_pred, dtype=float)
+    total_actual = np.sum(y_true)
+    if total_actual == 0:
+        return float('nan')
+    return float(100.0 * np.sum(y_pred - y_true) / total_actual)
+
+def trend_accuracy(y_true, y_pred) -> float:
+    y_true = np.asarray(y_true, dtype=float)
+    y_pred = np.asarray(y_pred, dtype=float)
+    if len(y_true) < 2:
+        return float('nan')
+    true_diff = np.sign(y_true[1:] - y_true[:-1])
+    pred_diff = np.sign(y_pred[1:] - y_pred[:-1])
+    return float(100.0 * np.mean(true_diff == pred_diff))
+
+def picp(y_true, y_lower, y_upper) -> tuple[float, int, int]:
+    if y_lower is None or y_upper is None:
+        return float('nan'), 0, 0
+        
+    y_true = np.asarray(y_true, dtype=float)
+    y_lower = np.asarray(y_lower, dtype=float)
+    y_upper = np.asarray(y_upper, dtype=float)
+    
+    valid_mask = ~np.isnan(y_true) & ~np.isnan(y_lower) & ~np.isnan(y_upper) & ~np.isinf(y_lower) & ~np.isinf(y_upper)
+    valid_count = int(np.sum(valid_mask))
+    
+    if valid_count == 0:
+        return float('nan'), 0, 0
+        
+    coverage = (y_true[valid_mask] >= y_lower[valid_mask]) & (y_true[valid_mask] <= y_upper[valid_mask])
+    covered_count = int(np.sum(coverage))
+    
+    return float(100.0 * covered_count / valid_count), valid_count, covered_count
 
 
 @dataclass
@@ -44,6 +93,16 @@ class FoldResult:
     mae: float
     smape: float
     wape: float
+    rmse: float
+    mase: float
+    bias: float
+    trend_acc: float
+    picp: float
+    actual_sum: float
+    absolute_error_sum: float
+    interval_count: int = 0
+    covered_count: int = 0
+    valid_interval_count: int = 0
 
 
 @dataclass
@@ -51,6 +110,8 @@ class WalkForwardResult:
     model_name: str
     category: str
     folds: list = field(default_factory=list)
+    step_lower_residuals: list[float] | None = None
+    step_upper_residuals: list[float] | None = None
 
     @property
     def mean_mae(self) -> float:
@@ -59,10 +120,51 @@ class WalkForwardResult:
     @property
     def mean_smape(self) -> float:
         return float(np.mean([f.smape for f in self.folds])) if self.folds else float("nan")
+        
+    @property
+    def mean_rmse(self) -> float:
+        return float(np.mean([f.rmse for f in self.folds])) if self.folds else float("nan")
+        
+    @property
+    def mean_mase(self) -> float:
+        return float(np.mean([f.mase for f in self.folds if not np.isnan(f.mase)])) if self.folds else float("nan")
+        
+    @property
+    def mean_bias(self) -> float:
+        return float(np.mean([f.bias for f in self.folds if not np.isnan(f.bias)])) if self.folds else float("nan")
+        
+    @property
+    def mean_trend_acc(self) -> float:
+        return float(np.mean([f.trend_acc for f in self.folds if not np.isnan(f.trend_acc)])) if self.folds else float("nan")
+        
+    @property
+    def mean_picp(self) -> float:
+        total_valid = sum(f.valid_interval_count for f in self.folds)
+        if total_valid == 0:
+            return float("nan")
+        total_covered = sum(f.covered_count for f in self.folds)
+        return float(100.0 * total_covered / total_valid)
+        
+    @property
+    def total_interval_evaluations(self) -> int:
+        return sum(f.valid_interval_count for f in self.folds)
+        
+    @property
+    def total_interval_covered(self) -> int:
+        return sum(f.covered_count for f in self.folds)
+        
+    @property
+    def picp_target(self) -> float:
+        return 95.0
 
     @property
-    def mean_wape(self) -> float:
-        return float(np.mean([f.wape for f in self.folds])) if self.folds else float("nan")
+    def global_wape(self) -> float:
+        if not self.folds:
+            return float("nan")
+        total_actual = sum(f.actual_sum for f in self.folds)
+        if total_actual == 0:
+            return float("nan")
+        return float(100.0 * sum(f.absolute_error_sum for f in self.folds) / total_actual)
 
 
 def walk_forward_splits(n: int, initial_train_size: int, horizon: int, step: int, max_folds: int | None = None):
@@ -119,6 +221,8 @@ def evaluate_model_walk_forward(
     result = WalkForwardResult(model_name=model_name, category=category)
     n = len(series)
 
+    all_step_residuals = [[] for _ in range(horizon)]
+
     for fold_idx, (train_end, test_start, test_end) in enumerate(
         walk_forward_splits(n, initial_train_size, horizon, step, max_folds=max_folds)
     ):
@@ -128,11 +232,34 @@ def evaluate_model_walk_forward(
         model = model_factory()
         try:
             model.fit(train_series)
-            preds = model.predict(horizon)
+            if hasattr(model, "predict_with_interval"):
+                preds, y_lower, y_upper = model.predict_with_interval(horizon)
+            else:
+                preds = model.predict(horizon)
+                y_lower = []
+                y_upper = []
+                for h in range(len(preds)):
+                    if len(all_step_residuals[h]) >= 2:
+                        lb = float(preds[h] + np.percentile(all_step_residuals[h], 2.5))
+                        ub = float(preds[h] + np.percentile(all_step_residuals[h], 97.5))
+                        y_lower.append(min(lb, ub))
+                        y_upper.append(max(lb, ub))
+                    else:
+                        y_lower.append(float('nan'))
+                        y_upper.append(float('nan'))
+                y_lower = np.array(y_lower)
+                y_upper = np.array(y_upper)
         except Exception:
             continue
 
         y_true = test_series.values
+        
+        picp_val, valid_count, covered_count = picp(y_true, y_lower, y_upper)
+
+        # Collect step residuals AFTER evaluation to prevent leakage
+        for h in range(len(preds)):
+            all_step_residuals[h].append(float(y_true[h] - preds[h]))
+
         result.folds.append(FoldResult(
             fold_index=fold_idx,
             train_size=len(train_series),
@@ -140,6 +267,28 @@ def evaluate_model_walk_forward(
             mae=mae(y_true, preds),
             smape=smape(y_true, preds),
             wape=wape(y_true, preds),
+            rmse=rmse(y_true, preds),
+            mase=mase(y_true, preds, train_series.values),
+            bias=bias(y_true, preds),
+            trend_acc=trend_accuracy(y_true, preds),
+            picp=picp_val,
+            actual_sum=float(np.sum(np.abs(y_true))),
+            absolute_error_sum=float(np.sum(np.abs(y_true - preds))),
+            interval_count=len(y_true),
+            covered_count=covered_count,
+            valid_interval_count=valid_count,
         ))
+
+    if result.folds:
+        # Calculate empirical quantiles (2.5% and 97.5%)
+        result.step_lower_residuals = []
+        result.step_upper_residuals = []
+        for residuals in all_step_residuals:
+            if residuals:
+                result.step_lower_residuals.append(float(np.percentile(residuals, 2.5)))
+                result.step_upper_residuals.append(float(np.percentile(residuals, 97.5)))
+            else:
+                result.step_lower_residuals.append(0.0)
+                result.step_upper_residuals.append(0.0)
 
     return result

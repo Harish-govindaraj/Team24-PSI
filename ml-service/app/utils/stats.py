@@ -26,7 +26,11 @@ class SeriesStats:
     zero_demand_pct: float
     trend_slope: float
     seasonal_strength: float | None
-    volatility_cv: float  # coefficient of variation = std / mean
+    volatility_cv: float
+    adi: float
+    cv2: float
+    demand_classification: str
+    classification_confidence: float
 
 
 def _trend_slope(series: pd.Series) -> float:
@@ -77,10 +81,34 @@ def compute_series_stats(series: pd.Series, category: str) -> SeriesStats:
     series = series.dropna()
     mean = float(series.mean())
     std = float(series.std())
+    n_obs = len(series)
+    
+    volatility_cv = std / mean if mean != 0 else float("inf")
+    cv2 = volatility_cv ** 2
+    
+    non_zero_count = (series > 0).sum()
+    adi = n_obs / non_zero_count if non_zero_count > 0 else float("inf")
+    
+    # Syntetos, Boylan and Croston (2005) classification
+    if adi < 1.32 and cv2 < 0.49:
+        classification = "Stable"
+    elif adi >= 1.32 and cv2 < 0.49:
+        classification = "Intermittent"
+    else:
+        # cv2 >= 0.49 (Erratic or Lumpy) -> mapped to Volatile
+        classification = "Volatile"
+        
+    # Calculate a normalized confidence score based on distance to boundaries
+    # boundary distances:
+    adi_dist = abs(adi - 1.32) / 1.32
+    cv2_dist = abs(cv2 - 0.49) / 0.49
+    # The further away from the boundary, the higher the confidence.
+    # Cap distances at 1.0, take average, scale to 0-100.
+    confidence = float(min(100.0, ((min(1.0, adi_dist) + min(1.0, cv2_dist)) / 2.0) * 100))
 
     return SeriesStats(
         category=category,
-        n_observations=int(len(series)),
+        n_observations=int(n_obs),
         mean=round(mean, 4),
         median=round(float(series.median()), 4),
         variance=round(float(series.var()), 4),
@@ -88,7 +116,11 @@ def compute_series_stats(series: pd.Series, category: str) -> SeriesStats:
         zero_demand_pct=round(100 * float((series == 0).mean()), 2),
         trend_slope=round(_trend_slope(series), 6),
         seasonal_strength=_seasonal_strength(series),
-        volatility_cv=round(std / mean, 4) if mean != 0 else float("inf"),
+        volatility_cv=round(volatility_cv, 4),
+        adi=round(adi, 4),
+        cv2=round(cv2, 4),
+        demand_classification=classification,
+        classification_confidence=round(confidence, 2)
     )
 
 

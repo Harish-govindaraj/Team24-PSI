@@ -17,4 +17,6 @@ public interface ForecastAIClient {
     OperationalDataResponse getOperationalData(String category);
 
     ScenarioResponse runScenario(ScenarioRequest request);
+
+    com.team24.pharma.dto.QualityReportResponse getQualityReport(String category);
 }
