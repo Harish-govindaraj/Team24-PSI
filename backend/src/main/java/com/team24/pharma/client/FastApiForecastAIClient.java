@@ -1,5 +1,7 @@
 package com.team24.pharma.client;
 
+import org.springframework.http.MediaType;
+import tools.jackson.databind.json.JsonMapper;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Collections;
@@ -46,12 +48,23 @@ public class FastApiForecastAIClient implements ForecastAIClient {
                 request.getCategory(), request.getHorizon());
 
         try {
-            FastApiForecastResponse fastApiResponse = aiServiceRestClient
-                    .post()
-                    .uri("/forecast")
-                    .body(request)
-                    .retrieve()
-                    .body(FastApiForecastResponse.class);
+            byte[] rawResponse = aiServiceRestClient
+        	.post()
+        	.uri("/forecast")
+        	.contentType(MediaType.APPLICATION_JSON)
+        	.accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_OCTET_STREAM)
+        	.body(request)
+        	.retrieve()
+        	.body(byte[].class);
+
+	   if (rawResponse == null || rawResponse.length == 0) {
+    		throw new AiServiceException("Received empty response from AI forecast service");
+	    }
+
+	    JsonMapper mapper = JsonMapper.builder().build();
+
+	    FastApiForecastResponse fastApiResponse =
+	        mapper.readValue(rawResponse, FastApiForecastResponse.class);
 
             if (fastApiResponse == null) {
                 throw new AiServiceException("Received null response from AI forecast service");
